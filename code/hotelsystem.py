@@ -1,0 +1,41 @@
+class HotelSystem():
+    def init(self):
+        self.buildings = {}
+        self.guest = {}
+        self.report = Report()
+        self.ring = ConsistentHashRing()
+        self.csvexport = CSVExporter()
+        self.benchmark = BenchmarkResult()
+
+    def initialize_system():
+        pass
+
+    def add_guest():
+        pass
+
+    def remove_guest():
+        pass
+
+    def add_building():
+        pass
+
+    def remove_building():
+        pass
+
+    def search_guest_location():
+        pass
+
+    def search_guest_by_room_id_and_building_id():
+        pass
+
+    def show_occupied_room():
+        pass
+
+    def show_load_balance_report():
+        pass
+
+    def run_benchmark():
+        pass
+
+    def export_csv():
+        pass
