@@ -10,9 +10,16 @@ class HotelSystem():
     def initialize_system():
         pass
 
+    # Add Controller
     def add_guest():
-        pass
 
+        pass
+    def add_add_guest_batch():
+
+        pass
+    def add_guest():
+
+        pass
     def remove_guest():
         pass
 
