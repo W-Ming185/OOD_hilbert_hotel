@@ -1,11 +1,11 @@
 class HotelSystem():
     def init(self):
-        self.buildings = {}
-        self.guest = {}
-        self.report = Report()
-        self.ring = ConsistentHashRing()
-        self.csvexport = CSVExporter()
-        self.benchmark = BenchmarkResult()
+        self.__buildings = {}
+        self.__guest = {}
+        self.__report = Report()
+        self.__ring = ConsistentHashRing()
+        self.__csvexport = CSVExporter()
+        self.__benchmark = BenchmarkResult()
 
     def initialize_system():
         pass
