@@ -1,6 +1,6 @@
 class VNode:
-    def __init__(self,hash_value,building):
-        self.__hash_value = hash_value
+    def __init__(self,building):
+        self.__hash_value = None
         self.__building = building
         self.__node_seq = None
 
@@ -12,3 +12,9 @@ class VNode:
 
     def get_building(self):
         return self.__building
+
+    def get_node_seq(self):
+        return self.__node_seq
+
+    def assign_hash_key(self,key):
+        self.__hash_value = key
