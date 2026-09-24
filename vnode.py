@@ -5,7 +5,10 @@ class VNode:
         self.__node_seq = None
 
     def assign_node_seq(self,rank):
-        pass
+        self.__node_seq = rank
     
-    def get_position(self):
-        pass
+    def get_hash_key(self):
+        return self.__hash_value
+
+    def get_building(self):
+        return self.__building
