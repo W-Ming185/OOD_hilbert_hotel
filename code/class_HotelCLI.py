@@ -44,19 +44,19 @@ class HotelCLI:
         system = self.get_system
         return system.add_single(c , s)
     
-    def handle_remove_guest(self , ):
+    def handle_remove_guest(self ,):
         system = self.get_system
         return system.remove_guest()
     
-    def handle_add_building(self):
+    def handle_add_building(self , node_id):
         system = self.get_system
 
-        return system.add_building()
+        return system.add_building(node_id)
     
-    def handle_remove_building(self):
+    def handle_remove_building(self , node_id):
         system = self.get_system
 
-        return system.remove_building()
+        return system.remove_building(node_id)
     
     def handle_search_guest_location(self):
         system = self.get_system
