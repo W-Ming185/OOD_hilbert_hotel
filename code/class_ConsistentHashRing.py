@@ -4,6 +4,7 @@ class ConsistentHashRing:
     @property
     def get_Vnode(self):
         return self.__Vnode
+    
     def add_node(self):
         pass
     def remove_node(self):
