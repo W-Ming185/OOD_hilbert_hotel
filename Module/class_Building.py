@@ -5,13 +5,16 @@ class Building:
         self.__Vnode = []
     
     @property
-    def get_node_id(self):
+    def node_id(self):
         return self.__node_id
+
     @property
-    def get_RoomAddr(self):
+    def RoomAddr(self):
         return self.__RoomAddr
+
     @property
-    def get_Vnode(self):
+    def Vnode(self):
         return self.__Vnode
+
     def add_room(self):
         pass

@@ -7,5 +7,6 @@ class ConsistentHashRing:
     
     def add_node(self):
         pass
+
     def remove_node(self):
         pass

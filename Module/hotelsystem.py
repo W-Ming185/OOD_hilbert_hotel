@@ -1,4 +1,8 @@
-class HotelSystem():
+import guest
+import class_RoomAddr
+import class_Building
+
+class HotelSystem:
     def init(self):
         self.__buildings = {}
         self.__guest = {}
@@ -26,11 +30,26 @@ class HotelSystem():
     def remove_building():
         pass
 
-    def search_guest_location():
-        pass
+    def search_guest_location(self,guest_id:tuple):
+        if guest_id in self.__guest:
+            guest = self.__guest.get(guest_id)
+            guestroom = guest.room
+            return f"node_id: {guestroom.node_id}, room_no: {guestroom.room_no}"
+        else:
+            return "guest_id not found"
 
-    def search_guest_by_room_id_and_building_id():
-        pass
+    def search_guest_by_room_id_and_building_id(self,location:tuple):
+        node_id,room_no = location
+        if node_id in self.__buildings:
+            building = self.__buildings.get(node_id)
+            for i in building.RoomAddr:
+                if i.room_no == room_no:
+                    room = i
+                    guest = room.guest
+                    return f"guest_id: {guest.guest_id}"
+            return "room_no not found"
+        else:
+            return "node_id not found"
 
     def show_occupied_room():
         pass
