@@ -23,10 +23,8 @@ class ConsistentHashRing:
 
         node.assign_hash_key(position_on_ring)
         bisect.insort(self.__list, node, key=lambda x: x.get_hash_key())
-        return node
-
-
-        pass
+        return node    
+    
     def remove_node(self, building):
         all_vnode = building.get_Vnode
         for vnode in all_vnode:

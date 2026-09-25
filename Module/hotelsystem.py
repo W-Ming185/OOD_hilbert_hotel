@@ -1,3 +1,6 @@
+import hashlib
+import bisect
+from guest import Guest
 class HotelSystem():
     def init(self):
         self.__buildings = {}
@@ -7,17 +10,50 @@ class HotelSystem():
         self.__csvexport = CSVExporter()
         self.__benchmark = BenchmarkResult()
 
+    @property
+    def ring(self):
+        return self.__ring
+    @property
+    def guest(self):
+        return self.__guest
+    
     def initialize_system():
         pass
 
-    # Add Controller
-    def add_guest_single():
+    # ! ! ! No edge case yet ! ! !
+    def add_guest_single(self, c):
+        ring = self.ring
+        #find the latest sequence
+        latest_sequence = 0
+        latest_ch = 0
 
-        pass
-    def add_add_guest_batch():
+        for item in self.guest:
+            channel , squence = item
+            if channel > latest_ch:
+                latest_ch = channel
+
+            if channel == c:
+                last_sequence += 1
+
+        
+        #First Man in new channel
+        if last_sequence == 0:
+            new_guest = Guest(c , 1)
+
+
+            return   
+        #Continue the seuqence
+        new_guest = Guest(c , last_sequence + 1)
+
+
+        return
+
+    def add_guest_batch():
+
 
         pass
     def remove_guest():
+        
         pass
 
     def add_building():
