@@ -1,6 +1,8 @@
 import hashlib
 import bisect
 from guest import Guest
+from vnode import VNode
+from Building import Building
 class HotelSystem():
     def init(self):
         self.__buildings = {}
@@ -22,10 +24,12 @@ class HotelSystem():
 
     # ! ! ! No edge case yet ! ! !
     def add_guest_single(self, c):
-        ring = self.ring
+        
         #find the latest sequence
         latest_sequence = 0
         latest_ch = 0
+
+        #find the sequence
 
         for item in self.guest:
             channel , squence = item
@@ -33,19 +37,29 @@ class HotelSystem():
                 latest_ch = channel
 
             if channel == c:
-                last_sequence += 1
-
+                latest_sequence += 1
+        new_sequence = latest_sequence + 1
+        new_guest = Guest(c , new_sequence)
         
-        #First Man in new channel
-        if last_sequence == 0:
-            new_guest = Guest(c , 1)
+        #SHA-256 Hash
+        salt = "ball"
+        text = f"{c}:{new_sequence}{salt}"
 
+        hash_num = hashlib.sha256(text.encode('utf-8'))
+        hash_num_64bit = hash_num.digest()[:8]
 
-            return   
-        #Continue the seuqence
-        new_guest = Guest(c , last_sequence + 1)
+        position = int.from_bytes(hash_num_64bit, byteorder='big')
 
+        #Adding into the ring
+        ring = self.ring
 
+        if len(ring.get_Vnode) == 0:
+
+            return "Cannot Insert Guest : No Building To InserT"
+        for vnode in ring.get_Vnode:
+            if vnode.get_hash_key == position:
+                building = vnode.get_building
+                building.add_room(new_guest)
         return
 
     def add_guest_batch():

@@ -6,13 +6,13 @@ class VNode:
 
     def assign_node_seq(self,rank):
         self.__node_seq = rank
-    
+    @property
     def get_hash_key(self):
         return self.__hash_value
-
+    @property
     def get_building(self):
         return self.__building
-
+    @property
     def get_node_seq(self):
         return self.__node_seq
 

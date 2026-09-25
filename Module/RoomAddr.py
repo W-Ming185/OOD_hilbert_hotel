@@ -1,8 +1,9 @@
+from guest import Guest
 class RoomAddr:
-    def __int__(self,node_id,room_no,guest):
+    def __int__(self,node_id,room_no):
         self.__node_id = node_id
         self.__room_no = room_no
-        self.__guest = guest
+        self.__guest = None
 
     @property
     def get_node_id(self):
@@ -14,6 +15,6 @@ class RoomAddr:
     def get_guest(self):
         return self.__guest
     
-    def assign_guest(self):
-        pass
+    def assign_guest(self , guest : Guest):
+        self.__guest = guest
 
