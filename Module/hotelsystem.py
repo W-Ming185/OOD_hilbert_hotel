@@ -20,7 +20,7 @@ class HotelSystem():
     def remove_guest():
         pass
 
-    def add_building(self,node_id):
+    def add_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
         if node_id in self.__buildings:
             print(f"Building {node_id} already exists.")
             return
@@ -30,9 +30,10 @@ class HotelSystem():
             return building
         pass
 
-    def remove_building(self,node_id):
+    def remove_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
         if node_id in self.__buildings:
             building = self.__buildings.pop(node_id)
+            self.__ring.remove_node(building)
             print(f"Success adding building {node_id}.")
             return building
         else:
