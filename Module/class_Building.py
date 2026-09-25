@@ -13,7 +13,9 @@ class Building:
     @property
     def get_Vnode(self):
         return self.__Vnode
-    def add_room(self):
+    def add_room(self,room):
+        self.__RoomAddr.append(room)
+        return room
         pass
     def add_vnode(self,node):
         self.__Vnode.append(node)
