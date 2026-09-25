@@ -30,7 +30,13 @@ class HotelSystem():
             return building
         pass
 
-    def remove_building():
+    def remove_building(self,node_id):
+        if node_id in self.__buildings:
+            building = self.__buildings.pop(node_id)
+            print(f"Success adding building {node_id}.")
+            return building
+        else:
+            print(f"{node_id} is not exist.")
         pass
 
     def search_guest_location():
