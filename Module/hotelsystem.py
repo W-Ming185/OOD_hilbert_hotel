@@ -1,5 +1,5 @@
 class HotelSystem():
-    def init(self):
+    def __init__(self):
         self.__buildings = {}
         self.__guest = {}
         self.__report = Report()
@@ -20,7 +20,14 @@ class HotelSystem():
     def remove_guest():
         pass
 
-    def add_building():
+    def add_building(self,node_id):
+        if node_id in self.__buildings:
+            print(f"Building {node_id} already exists.")
+            return
+        else:
+            building = Building(node_id)
+            self.__buildings[node_id] = building
+            return building
         pass
 
     def remove_building():
