@@ -11,23 +11,26 @@ class HotelSystem:
         self.__csvexport = CSVExporter()
         self.__benchmark = BenchmarkResult()
 
-    def initialize_system():
+    def initialize_system(self):
         pass
 
     # Add Controller
-    def add_guest_single():
-
-        pass
-    def add_add_guest_batch():
-
-        pass
-    def remove_guest():
+    def add_guest_single(self):
         pass
 
-    def add_building():
+    def add_add_guest_batch(self):
         pass
 
-    def remove_building():
+    def remove_guest(self):
+        pass
+
+    def add_building(self):
+        pass
+
+    def remove_building(self):
+        pass
+
+    def add_vnode(self):
         pass
 
     def search_guest_location(self,guest_id:tuple):
