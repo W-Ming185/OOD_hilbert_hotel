@@ -34,7 +34,7 @@ class HotelSystem:
         if guest_id in self.__guest:
             guest = self.__guest.get(guest_id)
             guestroom = guest.room
-            return f"node_id: {guestroom.node_id}, room_no: {guestroom.room_no}"
+            return (guestroom.node_id,guestroom.room_no)
         else:
             return "guest_id not found"
 
@@ -46,7 +46,7 @@ class HotelSystem:
                 if i.room_no == room_no:
                     room = i
                     guest = room.guest
-                    return f"guest_id: {guest.guest_id}"
+                    return guest.guest_id
             return "room_no not found"
         else:
             return "node_id not found"
