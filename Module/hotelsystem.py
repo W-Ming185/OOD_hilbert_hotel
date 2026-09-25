@@ -57,7 +57,7 @@ class HotelSystem():
 
             return "Cannot Insert Guest : No Building To InserT"
         for vnode in ring.get_Vnode:
-            if vnode.get_hash_key == position:
+            if vnode.get_hash_key >= position:
                 building = vnode.get_building
                 building.add_room(new_guest)
         return
