@@ -32,8 +32,13 @@ class HotelSystem():
     def search_guest_by_room_id_and_building_id():
         pass
 
-    def show_occupied_room():
-        pass
+    def show_occupied_room(self):
+        all_room = []
+        for Building in self.__buildings:
+            for room in Building.get_RoomAddr:
+                all_room.append(room)
+                
+        return all_room
 
     def show_load_balance_report():
         pass
