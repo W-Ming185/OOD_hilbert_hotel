@@ -15,3 +15,6 @@ class Building:
         return self.__Vnode
     def add_room(self):
         pass
+    def add_vnode(self,node):
+        self.__Vnode.append(node)
+        return len(self.__Vnode)
