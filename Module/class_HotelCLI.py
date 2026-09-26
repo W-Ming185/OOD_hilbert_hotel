@@ -1,7 +1,7 @@
 from hotelsystem import HotelSystem
 
 class HotelCLI:
-    def __int__(self,system : HotelSystem):
+    def __init__(self,system : HotelSystem):
         self.__system = system
         self.run()
     @property
