@@ -31,11 +31,16 @@ class ConsistentHashRing:
         bisect.insort(self.__list, node, key=lambda x: x.get_hash_key())
         return node
 
-
-        pass
     def remove_node(self, building):
         all_vnode = building.get_Vnode
         for vnode in all_vnode:
             self.__list.remove(vnode)
 
         return all_vnode
+
+    def get_vnode_for_guest(self,hash_value):
+        for vnode in self.__list:
+            if vnode.get_hash_key() >= hash_value:
+                return vnode
+
+        return self.__list[0]
