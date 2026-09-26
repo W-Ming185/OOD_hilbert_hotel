@@ -1,5 +1,6 @@
+from class_RoomAddr import RoomAddr
 class Guest():
-    def init(self,c,s):
+    def __init__(self,c,s):
         self.__c = c
         self.__s = s
         self.__room = RoomAddr()
