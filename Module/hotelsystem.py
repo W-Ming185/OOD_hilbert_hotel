@@ -1,6 +1,6 @@
 import hashlib
 import bisect
-from guest import Guest
+from Module.guest import Guest
 from vnode import VNode
 from Building import Building
 class HotelSystem():
@@ -23,27 +23,15 @@ class HotelSystem():
         pass
 
     # ! ! ! No edge case yet ! ! !
-    def add_guest_single(self, c):
-        
-        #find the latest sequence
-        latest_sequence = 0
-        latest_ch = 0
+    def add_guest_single(self, c , s):
+        id = tuple(c,s)
+        if id in self.__guest:
+            print("This id is already exist")
+            return "This id is already exist"
 
-        #find the sequence
-
-        for item in self.guest:
-            channel , squence = item
-            if channel > latest_ch:
-                latest_ch = channel
-
-            if channel == c:
-                latest_sequence += 1
-        new_sequence = latest_sequence + 1
-        new_guest = Guest(c , new_sequence)
-        
         #SHA-256 Hash
         salt = "ball"
-        text = f"{c}:{new_sequence}{salt}"
+        text = f"{c}:{s}{salt}"
 
         hash_num = hashlib.sha256(text.encode('utf-8'))
         hash_num_64bit = hash_num.digest()[:8]
@@ -56,19 +44,54 @@ class HotelSystem():
         if len(ring.get_Vnode) == 0:
 
             return "Cannot Insert Guest : No Building To InserT"
+        vnode_to_be_inserted = None
+        vnode_position = float("inf")
+
         for vnode in ring.get_Vnode:
-            if vnode.get_hash_key >= position:
-                building = vnode.get_building
-                building.add_room(new_guest)
-        return
+    
+            if position <= vnode.get_hash_key < vnode_position :
+                vnode_to_be_inserted  = vnode
+                vnode_position = vnode_to_be_inserted.get_position
 
-    def add_guest_batch():
+        if vnode_to_be_inserted is None:
+            print("There is no vnode to be inserted")
+            return "There is no vnode to be inserted"
 
+        building = vnode_to_be_inserted.get_building
+        new_guest = Guest(c,s)
+        building.add_room(new_guest)
+        print("Add Guest Succeed")
+        return "Add Guest Succeed"
 
-        pass
-    def remove_guest():
+    def add_guest_batch(self , c , s_start , n):
+        #Demo ก่อน Optimize ทีหลังได้ถ้า performance ไม่ดี
+        for x in range(s_start , n):
+            id = tuple(c,x)
+            if id in self.__guest:
+                print("There is some guest in this range already")
+                return
         
-        pass
+        for x in range(s_start , n):
+            self.add_guest_single(x , c)
+        return "Add Batch Succeed"
+
+    def remove_guest(self , c ,s):
+        id = tuple(c,s)
+        if id not in self.__guest:
+            print("There are no guest in this id")
+            return "There are no guest in this id"
+        rm_guest = self.__guest.pop(id)
+        room = rm_guest.get_room
+        bulding_id = room.get_node_id
+
+        building = self.__buildings[bulding_id]
+        building.remove_room(room.get_room_no)
+
+        #reference clearing (จะมีไม่มีก็ได้)
+        room.assign_guest(None)
+        rm_guest.assign_room(None)
+        return "Removal Succeed"
+
 
     def add_building():
         pass

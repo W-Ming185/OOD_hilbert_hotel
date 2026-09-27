@@ -1,5 +1,7 @@
-from guest import Guest
+from Module.guest import Guest
 from RoomAddr import RoomAddr
+import bisect
+
 class Building:
     def __int__(self,node_id):
         self.__node_id = node_id
@@ -27,8 +29,15 @@ class Building:
         new_room.assign_guest(guest)
         guest.assign_room(new_room)
         #Add room into building
-        self.__RoomAddr.append(new_room)
-        
+        bisect.insort(self.__RoomAddr , new_room , key=lambda x : x.get_room_no)
+        #self.__RoomAddr.append(new_room)
+
+    def remove_room(self , room_id):
+        idx = bisect.bisect_left(room_id)
+        if idx is None:
+            return "This room not exist"
+        del self.__RoomAddr[idx]
+        return "Deletion Succeed"    
         
 
 
