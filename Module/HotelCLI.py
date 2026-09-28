@@ -1,7 +1,7 @@
-from hotelsystem import HotelSystem
-
+#from hotelsystem import HotelSystem
+from guest import Guest
 class HotelCLI:
-    def __int__(self,system : HotelSystem):
+    def __init__(self,system : HotelSystem):
         self.__system = system
         self.run()
     @property
@@ -23,32 +23,59 @@ class HotelCLI:
         pass
 
     def handle_add_guest(self , method : str) -> None:
-        method = input("Enter Method : ")
-        if method == "Batch":
-            c = self._read_int("c")
-            s_start = self._read_int("s_start")
-            n = self._read_int("n")
-            self.handle_add_batch(c , s_start , n )
-        elif method == "Single":
-            c = self._read_int("c")
-            s = self._read_int("s")
-            self.handle_add_single(c , s)
-            
-        return 
+            method = input("Enter Method : ")
+            if method == "Batch":
+                c = self._read_int("c")
+                s_start = self._read_int("s_start")
+                n = self._read_int("n")
+                return self.handle_add_batch(c , s_start , n )
+            elif method == "Single":
+                c = self._read_int("c")
+                s = self._read_int("s")
+                return self.handle_add_single(c , s)
+            else:
+                print("Invalid Method")
+                return "Invalid Method"
     
     def handle_add_batch(self , c , s_start , n):
+        try:
+            c = int(c)
+            s_start = int(s_start)
+            n = int(n)
+        except:
+            print("Error c,s_start,n should be int")
+            return "Error c,s_start,n should be int"
         system = self.get_system
         return system.add_batch(c , s_start , n)
-    
+
     def handle_add_single(self , c , s):
+        try:
+            c = int(c)
+            s = int(s)
+        except:
+            print("Error c,s should be int")
+            return "Error c,s should be int"
+        
         system = self.get_system
-        return system.add_single(c , s)
+        return system.add_guest_single(c , s)
     
-    def handle_remove_guest(self ,):
+    def handle_remove_guest(self , c , s):
+        try:
+            c = int(c)
+            s = int(s)
+        except:
+            print("Error c,s should be int")
+            return "Error c,s should be int"
+        
         system = self.get_system
-        return system.remove_guest()
+        return system.remove_guest(c , s)
     
     def handle_add_building(self , node_id):
+        try:
+            node_id = int(node_id)
+        except:
+            print("Node it Need to be int")
+            return "Node it Need to be int"
         system = self.get_system
 
         return system.add_building(node_id)
@@ -86,4 +113,3 @@ class HotelCLI:
     def export_csv(self):
         system = self.get_system
         return system.export_csv()
-
