@@ -6,7 +6,7 @@ from Building import Building
 class HotelSystem():
     def init(self):
         self.__buildings = {}
-        self.__guest = {}
+        self.__guest = []
         self.__report = Report()
         self.__ring = ConsistentHashRing()
         self.__csvexport = CSVExporter()
@@ -48,7 +48,7 @@ class HotelSystem():
         vnode_position = float("inf")
 
         for vnode in ring.get_Vnode:
-    
+            #ยังไม่ได้ handle กรณี vnode ซ้อนกัน
             if position <= vnode.get_hash_key < vnode_position :
                 vnode_to_be_inserted  = vnode
                 vnode_position = vnode_to_be_inserted.get_position
@@ -59,6 +59,7 @@ class HotelSystem():
 
         building = vnode_to_be_inserted.get_building
         new_guest = Guest(c,s)
+        bisect.insort(self.__guest , new_guest , key= lambda x : x.get_hash_value)
         building.add_room(new_guest)
         print("Add Guest Succeed")
         return "Add Guest Succeed"

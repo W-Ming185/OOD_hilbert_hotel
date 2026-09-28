@@ -23,7 +23,6 @@ class Building:
         a = c - 1
         b = s - 1
         room_no = (a+b) * (a+b+1) // 2 + b + 1
-        id 
         new_room = RoomAddr(self.get_node_id, room_no)
         #Bidirectional Link
         new_room.assign_guest(guest)

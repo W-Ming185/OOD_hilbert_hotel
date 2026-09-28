@@ -1,6 +1,6 @@
 import hashlib
 import bisect
-
+from vnode import VNode
 class ConsistentHashRing:
     def __int__(self,Vnode):
         self.__list = []
