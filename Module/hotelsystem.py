@@ -24,14 +24,29 @@ class HotelSystem():
     
     def initialize_system():
         pass
-
+    def guest_dup_check(self , c , s):
+        inp = (c,s)
+        for guest in self.__guest:
+            if guest.guest_id == inp:
+                return True
+        return False
+    def ring_check(self):
+        ring = self.__ring
+        if len(ring.get_Vnode) == 0:
+            print("Cannot Insert Guest : No Building To Insert")
+            return False
+        return  True
+    
     # ! ! ! No edge case yet ! ! !
     def add_guest_single(self, c , s):
-        id = (c,s)
-        if id in self.__guest:
+        
+        if not self.ring_check():
+            return
+        
+        if self.guest_dup_check(c,s):
             print("This id is already exist")
             return "This id is already exist"
-
+        id = (c,s)
         #SHA-256 Hash
         salt = "ball"
         text = f"{c}:{s}{salt}"
@@ -43,10 +58,6 @@ class HotelSystem():
 
         #Adding into the ring
         ring = self.ring
-
-        if len(ring.get_Vnode) == 0:
-            print("Cannot Insert Guest : No Building To Insert")
-            return "Cannot Insert Guest : No Building To Insert"
         
         vnode_to_be_inserted = None
         vnode_position = float("inf")
@@ -67,13 +78,15 @@ class HotelSystem():
         bisect.insort(self.__guest , new_guest , key= lambda x : x.get_hash_value)
         building.add_room(new_guest)
         print("Add Guest Succeed")
+        print(self.__guest)
         return "Add Guest Succeed"
 
     def add_guest_batch(self , c , s_start , n):
+        if not self.ring_check():
+            return
         #Demo ก่อน Optimize ทีหลังได้ถ้า performance ไม่ดี
         for x in range(s_start , n):
-            id = (c,x)
-            if id in self.__guest:
+            if self.guest_dup_check(c , x):
                 print("There is some guest in this range already")
                 return
         

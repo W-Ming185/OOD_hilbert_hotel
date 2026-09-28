@@ -61,6 +61,8 @@ class HotelCLI:
             c = int(c)
             s_start = int(s_start)
             n = int(n)
+            if c < 0 or s_start < 0 or n < 0:
+                raise Exception("Input must be positive number")
         except:
             print("Error c,s_start,n should be int")
             return "Error c,s_start,n should be int"
@@ -71,6 +73,8 @@ class HotelCLI:
         try:
             c = int(c)
             s = int(s)
+            if c < 0 or s < 0:
+                raise Exception("Input must be positive number")
         except:
             print("Error c,s should be int")
             return "Error c,s should be int"
@@ -82,6 +86,9 @@ class HotelCLI:
         try:
             c = int(c)
             s = int(s)
+
+            if c < 0 or s < 0:
+                raise Exception("Input must be positive number")
         except:
             print("Error c,s should be int")
             return "Error c,s should be int"
