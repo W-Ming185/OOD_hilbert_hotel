@@ -6,13 +6,15 @@ class RoomAddr:
         self.__guest = None
 
     @property
-    def get_node_id(self):
+    def node_id(self):
         return self.__node_id
+
     @property
-    def get_room_no(self):
+    def room_no(self):
         return self.__room_no
+
     @property
-    def get_guest(self):
+    def guest(self):
         return self.__guest
     
     def assign_guest(self , guest : Guest):

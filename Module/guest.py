@@ -6,7 +6,7 @@ class Guest():
         self.__hash_value = hash_value
 
     @property
-    def get_guest_id(self):
+    def guest_id(self):
         return self.__guest_id
     
     @property
