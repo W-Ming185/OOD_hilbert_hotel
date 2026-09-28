@@ -128,7 +128,7 @@ class HotelSystem():
             if affected_guest:
                 self.migration(affected_guest)
             return building
-        pass
+
 
     def remove_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
         if node_id in self.__buildings:
@@ -147,7 +147,7 @@ class HotelSystem():
             return building
         else:
             print(f"{node_id} is not exist.")
-        pass
+
 
     def search_guest_location(self,guest_id:tuple):
         if guest_id in self.__guest:
