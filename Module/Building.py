@@ -37,9 +37,8 @@ class Building:
             return "This room not exist"
         del self.__RoomAddr[idx]
         return "Deletion Succeed"    
+
         
-
-
     def add_vnode(self,node):
         self.__Vnode.append(node)
         return len(self.__Vnode)

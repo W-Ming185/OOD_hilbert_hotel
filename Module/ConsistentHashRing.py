@@ -2,16 +2,21 @@ import hashlib
 import bisect
 from vnode import VNode
 class ConsistentHashRing:
-    def __int__(self,Vnode):
+    def __init__(self,vnode_size):
         self.__list = []
+        self.__vnode_size = vnode_size
     @property
     def get_Vnode(self):
-        return self.__Vnode
+        return self.__list
+    @property
+    def get_vnode_size(self):
+        return self.__vnode_size
     
     def add_node(self,building):
         node = VNode(building)
-        rank = building.add_vnode(node)
-        node_id = building.get_node_id()
+        building.add_vnode(node)
+        rank = building.get_Vnode_rank
+        node_id = building.get_node_id
         node.assign_node_seq(rank)
         text = f"{node_id}:{rank}"
         salt = "ball"
@@ -23,11 +28,18 @@ class ConsistentHashRing:
 
         node.assign_hash_key(position_on_ring)
         bisect.insort(self.__list, node, key=lambda x: x.get_hash_key())
-        return node    
-    
+        return node
+
     def remove_node(self, building):
         all_vnode = building.get_Vnode
         for vnode in all_vnode:
             self.__list.remove(vnode)
 
         return all_vnode
+
+    def get_vnode_for_guest(self,hash_value):
+        for vnode in self.__list:
+            if vnode.get_hash_key() >= hash_value:
+                return vnode
+
+        return self.__list[0]
