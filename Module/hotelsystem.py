@@ -1,6 +1,6 @@
 import hashlib
 import bisect
-from Module.guest import Guest
+from guest import Guest
 from vnode import VNode
 from RoomAddr import RoomAddr
 from Building import Building
@@ -107,13 +107,13 @@ class HotelSystem():
             vnode_size = self.__ring.get_vnode_size
             for _ in range(vnode_size):
                 self.__ring.add_node(building)
-            print(self.__buildings,[x.get_hash_key() for x in self.__ring.get_Vnode])
+            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode])
 
             affected_guest = []
             for vnode in building.get_Vnode:
                 prev = self.__ring.prev_vnode(vnode) 
-                prev_hash = prev.get_hash_key()
-                new_hash = vnode.get_hash_key()
+                prev_hash = prev.get_hash_key
+                new_hash = vnode.get_hash_key
 
                 if prev_hash < new_hash:
                     start_idx = bisect.bisect_right(self.__guest, prev_hash, key=lambda x: x.get_hash_value)
@@ -136,7 +136,7 @@ class HotelSystem():
             old_vnode = self.__ring.remove_node(building)
             
             print(f"Success removing building {node_id}.")
-            print(self.__buildings,[x.get_hash_key() for x in self.__ring.get_Vnode]) 
+            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode]) 
 
             affected_guest = []
             for room in building.get_RoomAddr:

@@ -1,6 +1,5 @@
-from RoomAddr import RoomAddr
 class Guest():
-    def init(self,c,s,hash_value):
+    def __init__(self,c,s,hash_value):
         self.__room = None
         self.__guest_id = (c , s)
         self.__hash_value = hash_value

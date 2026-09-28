@@ -1,9 +1,9 @@
-from Module.guest import Guest
+from guest import Guest
 from RoomAddr import RoomAddr
 import bisect
 
 class Building:
-    def __int__(self,node_id):
+    def __init__(self,node_id):
         self.__node_id = node_id
         self.__RoomAddr = []
         self.__Vnode = []
@@ -41,4 +41,7 @@ class Building:
         
     def add_vnode(self,node):
         self.__Vnode.append(node)
+        return len(self.__Vnode)
+
+    def get_Vnode_rank(self):
         return len(self.__Vnode)

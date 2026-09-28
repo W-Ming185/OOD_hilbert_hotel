@@ -1,4 +1,3 @@
-from Module.guest import Guest
 class RoomAddr:
     def __init__(self,node_id,room_no,guest):
         self.__node_id = node_id
