@@ -43,3 +43,11 @@ class ConsistentHashRing:
                 return vnode
 
         return self.__list[0]
+
+    def prev_vnode(self,vnode):
+        index = self.__list.index(vnode)
+        return self.__list[index-1]
+
+    def next_vnode(self,vnode):
+        index = self.__list.index(vnode)
+        return self.__list[index+1 % len(self.__list)]    
