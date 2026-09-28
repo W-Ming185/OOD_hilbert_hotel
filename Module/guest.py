@@ -1,4 +1,4 @@
-from class_RoomAddr import RoomAddr
+from Module.RoomAddr import RoomAddr
 class Guest():
     def __init__(self,c,s):
         self.__c = c

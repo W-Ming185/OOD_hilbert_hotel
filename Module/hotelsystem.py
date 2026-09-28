@@ -1,5 +1,5 @@
-from class_Building import Building
-from class_ConsistentHashRing import ConsistentHashRing
+from Module.Building import Building
+from Module.ConsistentHashRing import ConsistentHashRing
 from guest import Guest
 from vnode import VNode
 class HotelSystem():
