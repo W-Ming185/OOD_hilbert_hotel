@@ -93,7 +93,6 @@ class HotelSystem():
         rm_guest.assign_room(None)
         return "Removal Succeed"
 
-
     def add_building():
         pass
 
