@@ -16,10 +16,6 @@ class Building:
     @property
     def get_Vnode_rank(self):
         return len(self.__Vnode)-1
-    def add_room(self,room):
-        self.__RoomAddr.append(room)
-        return room
-        pass
     def add_vnode(self,node):
         self.__Vnode.append(node)
-        return len(self.__Vnode)
+        
