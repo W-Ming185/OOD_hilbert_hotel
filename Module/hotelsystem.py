@@ -1,12 +1,11 @@
 import hashlib
 import bisect
 from Module.guest import Guest
-from vnode import VNode
-from RoomAddr import RoomAddr
-from Building import Building
-from ConsistentHashRing import ConsistentHashRing
+from Module.vnode import VNode
+from Module.RoomAddr import RoomAddr
+from Module.Building import Building
+from Module.ConsistentHashRing import ConsistentHashRing
 
-import bisect
 class HotelSystem():
     def __init__(self):
         self.__buildings = {}
@@ -28,7 +27,7 @@ class HotelSystem():
 
     # ! ! ! No edge case yet ! ! !
     def add_guest_single(self, c , s):
-        id = tuple(c,s)
+        id = (c,s)
         if id in self.__guest:
             print("This id is already exist")
             return "This id is already exist"
@@ -46,23 +45,25 @@ class HotelSystem():
         ring = self.ring
 
         if len(ring.get_Vnode) == 0:
-
-            return "Cannot Insert Guest : No Building To InserT"
+            print("Cannot Insert Guest : No Building To Insert")
+            return "Cannot Insert Guest : No Building To Insert"
+        
         vnode_to_be_inserted = None
         vnode_position = float("inf")
 
         for vnode in ring.get_Vnode:
+            print(vnode.get_hash_key)
             #ยังไม่ได้ handle กรณี vnode ซ้อนกัน
             if position <= vnode.get_hash_key < vnode_position :
                 vnode_to_be_inserted  = vnode
-                vnode_position = vnode_to_be_inserted.get_position
+                vnode_position = vnode_to_be_inserted.get_hash_key
 
         if vnode_to_be_inserted is None:
             print("There is no vnode to be inserted")
             return "There is no vnode to be inserted"
 
         building = vnode_to_be_inserted.get_building
-        new_guest = Guest(c,s)
+        new_guest = Guest(c,s,vnode_position)
         bisect.insort(self.__guest , new_guest , key= lambda x : x.get_hash_value)
         building.add_room(new_guest)
         print("Add Guest Succeed")
@@ -71,7 +72,7 @@ class HotelSystem():
     def add_guest_batch(self , c , s_start , n):
         #Demo ก่อน Optimize ทีหลังได้ถ้า performance ไม่ดี
         for x in range(s_start , n):
-            id = tuple(c,x)
+            id = (c,x)
             if id in self.__guest:
                 print("There is some guest in this range already")
                 return
@@ -107,13 +108,13 @@ class HotelSystem():
             vnode_size = self.__ring.get_vnode_size
             for _ in range(vnode_size):
                 self.__ring.add_node(building)
-            print(self.__buildings,[x.get_hash_key() for x in self.__ring.get_Vnode])
+            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode])
 
             affected_guest = []
             for vnode in building.get_Vnode:
                 prev = self.__ring.prev_vnode(vnode) 
-                prev_hash = prev.get_hash_key()
-                new_hash = vnode.get_hash_key()
+                prev_hash = prev.get_hash_key
+                new_hash = vnode.get_hash_key
 
                 if prev_hash < new_hash:
                     start_idx = bisect.bisect_right(self.__guest, prev_hash, key=lambda x: x.get_hash_value)
@@ -136,7 +137,7 @@ class HotelSystem():
             old_vnode = self.__ring.remove_node(building)
             
             print(f"Success removing building {node_id}.")
-            print(self.__buildings,[x.get_hash_key() for x in self.__ring.get_Vnode]) 
+            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode]) 
 
             affected_guest = []
             for room in building.get_RoomAddr:
@@ -195,8 +196,3 @@ class HotelSystem():
     def export_csv():
         pass
 
-
-hotel = HotelSystem()
-hotel.add_building("a")
-hotel.add_building("b")
-hotel.remove_building("b")

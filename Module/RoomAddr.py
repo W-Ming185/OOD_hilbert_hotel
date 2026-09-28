@@ -1,4 +1,7 @@
-from Module.guest import Guest
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from Module.guest import Guest
 class RoomAddr:
     def __init__(self,node_id,room_no,guest):
         self.__node_id = node_id
@@ -17,6 +20,6 @@ class RoomAddr:
     def guest(self):
         return self.__guest
     
-    def assign_guest(self , guest : Guest):
+    def assign_guest(self , guest : "Guest"):
         self.__guest = guest
 

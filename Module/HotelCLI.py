@@ -1,29 +1,48 @@
-#from hotelsystem import HotelSystem
-from guest import Guest
+from Module.hotelsystem import HotelSystem
+
 class HotelCLI:
     def __init__(self,system : HotelSystem):
         self.__system = system
         self.run()
+
     @property
     def get_system(self):
         return self.__system
 
     def _read_int(self , text : str):
         try:
-            input = int(input(f"{text} :"))
-            return input
+            print(f"{text} : ",end="")
+            inp = int(input(""))
+            return inp
         except:
             raise Exception("Error")
             
     def run(self):
+        command = {
+            "1":self.handle_add_guest,
+            "2":self.handle_add_building,
+            "3":self.handle_remove_building,
+            "4":self.handle_search_guest_location,
+
+        }
         # show menu and call method
-        pass
+        while True:
+            inp = input("Enter : ")
+            if inp == "0":
+                return 
+            elif inp == "1":
+                method = input("method : ")
+                self.handle_add_guest(method)
+            elif inp == "2":
+                building_id = input("Building ID : ")
+                self.handle_add_building(building_id)
+
+
     def initialize_system(self):
 
         pass
 
     def handle_add_guest(self , method : str) -> None:
-            method = input("Enter Method : ")
             if method == "Batch":
                 c = self._read_int("c")
                 s_start = self._read_int("s_start")
@@ -46,7 +65,7 @@ class HotelCLI:
             print("Error c,s_start,n should be int")
             return "Error c,s_start,n should be int"
         system = self.get_system
-        return system.add_batch(c , s_start , n)
+        return system.add_guest_batch(c , s_start , n)
 
     def handle_add_single(self , c , s):
         try:
@@ -113,3 +132,5 @@ class HotelCLI:
     def export_csv(self):
         system = self.get_system
         return system.export_csv()
+
+Hotel = HotelCLI(HotelSystem())
