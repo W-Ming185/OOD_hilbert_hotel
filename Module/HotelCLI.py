@@ -18,37 +18,50 @@ class HotelCLI:
             raise Exception("Error")
             
     def run(self):
-        command = {
-            "1":self.handle_add_guest,
-            "2":self.handle_add_building,
-            "3":self.handle_remove_building,
-            "4":self.handle_search_guest_location,
-
-        }
         # show menu and call method
         while True:
+            print(
+            "-------------------\n"
+            "[0] Quit\n" 
+            "[1] Add Guest\n" 
+            "[2] Add Building\n" \
+            "[3] Remove Guest\n"
+            "-------------------\n")
             inp = input("Enter : ")
+            
             if inp == "0":
                 return 
             elif inp == "1":
-                method = input("method : ")
+                print(
+                    "--------------------\n"
+                    "Add Guest Method:\n"
+                    "[1] Batch\n"
+                    "[2] Single\n" 
+                    "--------------------\n"
+                )
+                method = input("Method : ")
                 self.handle_add_guest(method)
             elif inp == "2":
                 building_id = input("Building ID : ")
                 self.handle_add_building(building_id)
-
+            elif inp == "3":
+                print("Enter Guest ID for removal : ")
+                c = input("c :")
+                s = input("s :")
+                self.handle_remove_guest(c,s)
 
     def initialize_system(self):
 
         pass
 
     def handle_add_guest(self , method : str) -> None:
-            if method == "Batch":
+            
+            if method == "1":
                 c = self._read_int("c")
                 s_start = self._read_int("s_start")
                 n = self._read_int("n")
                 return self.handle_add_batch(c , s_start , n )
-            elif method == "Single":
+            elif method == "2":
                 c = self._read_int("c")
                 s = self._read_int("s")
                 return self.handle_add_single(c , s)

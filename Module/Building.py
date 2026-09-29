@@ -35,7 +35,7 @@ class Building:
         #self.__RoomAddr.append(new_room)
 
     def remove_room(self , room_id):
-        idx = bisect.bisect_left(room_id)
+        idx = bisect.bisect_left(self.__RoomAddr,room_id,key=lambda room: room.room_no,)
         if idx is None:
             return "This room not exist"
         del self.__RoomAddr[idx]
