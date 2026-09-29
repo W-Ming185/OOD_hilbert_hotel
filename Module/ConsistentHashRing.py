@@ -1,6 +1,6 @@
 import hashlib
 import bisect
-from vnode import VNode
+from Module.vnode import VNode
 class ConsistentHashRing:
     def __init__(self,vnode_size):
         self.__list = []
@@ -39,7 +39,7 @@ class ConsistentHashRing:
 
     def get_vnode_for_guest(self,hash_value):
         for vnode in self.__list:
-            if vnode.get_hash_key() >= hash_value:
+            if vnode.get_hash_key >= hash_value:
                 return vnode
 
         return self.__list[0]

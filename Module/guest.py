@@ -1,3 +1,7 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from Module.RoomAddr import RoomAddr
 class Guest():
     def __init__(self,c,s,hash_value):
         self.__room = None
@@ -16,5 +20,5 @@ class Guest():
     def get_hash_value(self):
         return self.__hash_value
     
-    def assign_room(self , room : RoomAddr):
+    def assign_room(self , room : "RoomAddr"):
         self.__room = room

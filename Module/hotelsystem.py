@@ -1,12 +1,11 @@
 import hashlib
 import bisect
-from guest import Guest
-from vnode import VNode
-from RoomAddr import RoomAddr
-from Building import Building
-from ConsistentHashRing import ConsistentHashRing
+from Module.guest import Guest
+from Module.vnode import VNode
+from Module.RoomAddr import RoomAddr
+from Module.Building import Building
+from Module.ConsistentHashRing import ConsistentHashRing
 
-import bisect
 class HotelSystem():
     def __init__(self):
         self.__buildings = {}
@@ -23,16 +22,53 @@ class HotelSystem():
     def guest(self):
         return self.__guest
     
+    @property
+    def guest_data_list(self):
+        res = []
+        for i in self.__guest:
+            id = i.guest_id
+            room = i.get_room.room_no
+            hash_value = i.get_hash_value
+            node = i.get_room.node_id
+            data = (id,room,hash_value,node)
+            res.append(data)
+        return res
+    
+    def print_guest(self):
+        ls = self.guest_data_list
+        print("-----------------")
+        print("ID,ROOM_NO,HASH")
+        for i in ls:
+            print(i)
+        print("-----------------")
+
     def initialize_system():
         pass
 
+    def guest_dup_check(self , c , s):
+        inp = (c,s)
+        for guest in self.__guest:
+            if guest.guest_id == inp:
+                return True
+        return False
+    
+    def ring_check(self):
+        ring = self.__ring
+        if len(ring.get_Vnode) == 0:
+            print("Cannot Insert Guest : No Building To Insert")
+            return False
+        return  True
+    
     # ! ! ! No edge case yet ! ! !
     def add_guest_single(self, c , s):
-        id = tuple(c,s)
-        if id in self.__guest:
+        
+        if not self.ring_check():
+            return
+        
+        if self.guest_dup_check(c,s):
             print("This id is already exist")
             return "This id is already exist"
-
+        id = (c,s)
         #SHA-256 Hash
         salt = "ball"
         text = f"{c}:{s}{salt}"
@@ -44,57 +80,52 @@ class HotelSystem():
 
         #Adding into the ring
         ring = self.ring
-
-        if len(ring.get_Vnode) == 0:
-
-            return "Cannot Insert Guest : No Building To InserT"
-        vnode_to_be_inserted = None
-        vnode_position = float("inf")
-
-        for vnode in ring.get_Vnode:
-            #ยังไม่ได้ handle กรณี vnode ซ้อนกัน
-            if position <= vnode.get_hash_key < vnode_position :
-                vnode_to_be_inserted  = vnode
-                vnode_position = vnode_to_be_inserted.get_position
-
-        if vnode_to_be_inserted is None:
-            print("There is no vnode to be inserted")
-            return "There is no vnode to be inserted"
-
+        vnode_to_be_inserted = ring.get_vnode_for_guest(position)
         building = vnode_to_be_inserted.get_building
-        new_guest = Guest(c,s)
+        new_guest = Guest(c,s,position)
         bisect.insort(self.__guest , new_guest , key= lambda x : x.get_hash_value)
         building.add_room(new_guest)
         print("Add Guest Succeed")
+        self.print_guest()
         return "Add Guest Succeed"
 
     def add_guest_batch(self , c , s_start , n):
+        if not self.ring_check():
+            return
         #Demo ก่อน Optimize ทีหลังได้ถ้า performance ไม่ดี
-        for x in range(s_start , n):
-            id = tuple(c,x)
-            if id in self.__guest:
+        for x in range(s_start , s_start + n):
+            if self.guest_dup_check(c , x):
                 print("There is some guest in this range already")
                 return
         
-        for x in range(s_start , n):
-            self.add_guest_single(x , c)
+        for x in range(s_start , n + 1):
+            self.add_guest_single(c , x)
+        print("Add Batch Succeed")
         return "Add Batch Succeed"
 
     def remove_guest(self , c ,s):
-        id = tuple(c,s)
-        if id not in self.__guest:
-            print("There are no guest in this id")
-            return "There are no guest in this id"
-        rm_guest = self.__guest.pop(id)
+        
+        if not self.guest_dup_check(c,s):
+            print("This id does not exist for removal")
+            return
+        id = (c,s)
+        rm_guest = None
+        for guest in self.__guest:
+            if guest.guest_id == id:
+                rm_guest = guest
+
         room = rm_guest.get_room
-        bulding_id = room.get_node_id
+        bulding_id = room.node_id
 
         building = self.__buildings[bulding_id]
-        building.remove_room(room.get_room_no)
+        building.remove_room(room.room_no)
+        self.__guest.remove(rm_guest)
 
         #reference clearing (จะมีไม่มีก็ได้)
         room.assign_guest(None)
         rm_guest.assign_room(None)
+        self.print_guest()
+        print("Removal Succeed")
         return "Removal Succeed"
 
     def add_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
@@ -126,7 +157,9 @@ class HotelSystem():
                     affected_guest.extend(self.__guest[:end_idx])
 
             if affected_guest:
-                self.migration(affected_guest)
+                history = self.migration(affected_guest)
+                for i in history:
+                    print(i)
             return building
 
 
@@ -142,7 +175,9 @@ class HotelSystem():
             for room in building.get_RoomAddr:
                 affected_guest.append(room.get_guest)
             if affected_guest:
-                self.migration(affected_guest)
+                history = self.migration(affected_guest)
+                for i in history:
+                    print(i)
             self.__buildings.pop(node_id)
             return building
         else:
@@ -161,13 +196,13 @@ class HotelSystem():
         history = []
         for guest in guest_list:
             room = guest.get_room
-            old_node_id = room.get_node_id
+            old_node_id = room.node_id
             old_node = self.__buildings[old_node_id]
             new_vnode = self.__ring.get_vnode_for_guest(guest.get_hash_value)
-            new_node = new_vnode.get_building()
+            new_node = new_vnode.get_building
             new_node.add_room(guest)
-            old_node.remove_room(room.get_room_no)
-            history.append(f"{guest.get_guest_id} : {old_node_id} -> {new_node.get_node_id}")
+            old_node.remove_room(room.room_no)
+            history.append(f"{guest.guest_id} : {old_node_id} -> {new_node.get_node_id}")
         return history
 
     def search_guest_by_room_id_and_building_id(self,location:tuple):
@@ -195,8 +230,3 @@ class HotelSystem():
     def export_csv():
         pass
 
-
-hotel = HotelSystem()
-hotel.add_building("a")
-hotel.add_building("b")
-hotel.remove_building("b")
