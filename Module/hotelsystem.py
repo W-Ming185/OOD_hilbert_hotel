@@ -159,7 +159,6 @@ class HotelSystem():
                 self.migration(affected_guest)
             return building
 
-
     def remove_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
         if node_id in self.__buildings:
             building = self.__buildings[node_id]
