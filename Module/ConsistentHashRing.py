@@ -37,7 +37,7 @@ class ConsistentHashRing:
 
         return all_vnode
 
-    def get_vnode_for_guest(self,hash_value):
+    def get_vnode_for_guest(self,hash_value): #binary search treeได้
         for vnode in self.__list:
             if vnode.get_hash_key >= hash_value:
                 return vnode

@@ -98,7 +98,7 @@ class HotelSystem():
                 print("There is some guest in this range already")
                 return
         
-        for x in range(s_start , n + 1):
+        for x in range(s_start , s_start + n + 1):
             self.add_guest_single(c , x)
         print("Add Batch Succeed")
         return "Add Batch Succeed"
@@ -164,7 +164,10 @@ class HotelSystem():
 
 
     def remove_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
+        
         if node_id in self.__buildings:
+            if len(self.__buildings) == 1:
+                return "This is The Last Building"
             building = self.__buildings[node_id]
             old_vnode = self.__ring.remove_node(building)
             
