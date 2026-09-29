@@ -29,7 +29,8 @@ class HotelSystem():
             id = i.guest_id
             room = i.get_room.room_no
             hash_value = i.get_hash_value
-            data = (id,room,hash_value)
+            node = i.get_room.node_id
+            data = (id,room,hash_value,node)
             res.append(data)
         return res
     
@@ -97,7 +98,7 @@ class HotelSystem():
                 print("There is some guest in this range already")
                 return
         
-        for x in range(s_start , n + 1):
+        for x in range(s_start , s_start + n + 1):
             self.add_guest_single(c , x)
         print("Add Batch Succeed")
         return "Add Batch Succeed"
@@ -156,11 +157,22 @@ class HotelSystem():
                     affected_guest.extend(self.__guest[:end_idx])
 
             if affected_guest:
-                self.migration(affected_guest)
+                history = self.migration(affected_guest)
+                for i in history:
+                    print(i)
+            for i in self.__buildings.values():
+                print(f"Building : {i.get_node_id}")
+                print(f"Guest : {len(i.get_RoomAddr)}")
+                for room in i.get_RoomAddr:
+                    print(room.guest.guest_id)
             return building
 
     def remove_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
+        
         if node_id in self.__buildings:
+            if len(self.__buildings) == 1:
+                print("This is The Last Buildin")
+                return "This is The Last Building"
             building = self.__buildings[node_id]
             old_vnode = self.__ring.remove_node(building)
             
@@ -171,8 +183,15 @@ class HotelSystem():
             for room in building.get_RoomAddr:
                 affected_guest.append(room.get_guest)
             if affected_guest:
-                self.migration(affected_guest)
+                history = self.migration(affected_guest)
+                for i in history:
+                    print(i)
             self.__buildings.pop(node_id)
+            for i in self.__buildings.values():
+                print(f"Building : {i.get_node_id}")
+                print(f"Guest : {len(i.get_RoomAddr)}")
+                for room in i.get_RoomAddr:
+                    print(room.guest.guest_id)
             return building
         else:
             print(f"{node_id} is not exist.")
@@ -190,13 +209,13 @@ class HotelSystem():
         history = []
         for guest in guest_list:
             room = guest.get_room
-            old_node_id = room.get_node_id
+            old_node_id = room.node_id
             old_node = self.__buildings[old_node_id]
             new_vnode = self.__ring.get_vnode_for_guest(guest.get_hash_value)
-            new_node = new_vnode.get_building()
+            new_node = new_vnode.get_building
             new_node.add_room(guest)
-            old_node.remove_room(room.get_room_no)
-            history.append(f"{guest.get_guest_id} : {old_node_id} -> {new_node.get_node_id}")
+            old_node.remove_room(room.room_no)
+            history.append(f"{guest.guest_id} : {old_node_id} -> {new_node.get_node_id}")
         return history
 
     def search_guest_by_room_id_and_building_id(self,location:tuple):
