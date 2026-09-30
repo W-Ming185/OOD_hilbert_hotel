@@ -156,8 +156,8 @@ class HotelSystem():
             data = []
             for value in self.__guest:
                 c, s = value.guest_id
-                node_id = value.room.node_id
-                room_no = value.room.room_no
+                node_id = value.get_room.node_id
+                room_no = value.get_room.room_no
                 data.append({
                     "channel_id": c,
                     "seat_id": s,

@@ -10,11 +10,11 @@ class Guest():
         return self.__guest_id
     
     @property
-    def room(self):
+    def get_room(self):
         return self.__room
 
     @property
-    def hash_value(self):
+    def get_hash_value(self):
         return self.__hash_value
     
     def assign_room(self , room : RoomAddr):
