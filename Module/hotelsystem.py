@@ -1,8 +1,12 @@
 import hashlib
 import bisect
+import csv
 from Module.guest import Guest
 from vnode import VNode
 from Building import Building
+from CSVExporter import CSVExporter
+from bisect import bisect_left, insort
+
 class HotelSystem():
     def __init__(self):
         self.__buildings = {}
@@ -119,12 +123,12 @@ class HotelSystem():
         pass
 
     def search_guest_location(self,guest_id:tuple):
-        if guest_id in self.__guest:
-            guest = self.__guest.get(guest_id)
-            guestroom = guest.room
-            return (guestroom.node_id,guestroom.room_no)
-        else:
-            return "guest_id not found"
+        i = bisect_left(self.__guest, guest_id, key=lambda g: g.guest_id)
+        if i < len(self.__guest) and self.__guest[i].guest_id == guest_id:
+            guest = self.__guest[i]
+            room = guest.room
+            return (room.node_id, room.room_no)
+        return "guest_id not found"
 
     def search_guest_by_room_id_and_building_id(self,location:tuple):
         node_id,room_no = location
@@ -148,7 +152,28 @@ class HotelSystem():
     def run_benchmark():
         pass
 
-    def export_csv():
+    def export_guest_csv(self):
+            data = []
+            for value in self.__guest:
+                c, s = value.guest_id
+                node_id = value.room.node_id
+                room_no = value.room.room_no
+                data.append({
+                    "channel_id": c,
+                    "seat_id": s,
+                    "node_id": node_id,
+                    "room_no": room_no,
+                })
+    
+            CSVExporter.write_csv(
+                "guest.csv", data,
+                fieldnames=["channel_id", "seat_id", "node_id", "room_no"]
+            )
+    
+    def export_migration_csv():
+        pass
+
+    def export_experiment_csv():
         pass
 
 

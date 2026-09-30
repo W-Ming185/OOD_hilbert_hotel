@@ -3,7 +3,7 @@ from RoomAddr import RoomAddr
 import bisect
 
 class Building:
-    def __int__(self,node_id):
+    def __init__(self,node_id):
         self.__node_id = node_id
         self.__RoomAddr = []
         self.__Vnode = []

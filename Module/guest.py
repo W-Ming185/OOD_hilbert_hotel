@@ -1,6 +1,6 @@
 from RoomAddr import RoomAddr
 class Guest():
-    def init(self,c,s,hash_value):
+    def __init__(self,c,s,hash_value):
         self.__room = None
         self.__guest_id = (c , s)
         self.__hash_value = hash_value
@@ -10,11 +10,11 @@ class Guest():
         return self.__guest_id
     
     @property
-    def get_room(self):
+    def room(self):
         return self.__room
 
     @property
-    def get_hash_value(self):
+    def hash_value(self):
         return self.__hash_value
     
     def assign_room(self , room : RoomAddr):
