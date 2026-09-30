@@ -1,6 +1,6 @@
 import hashlib
 import bisect
-from vnode import VNode
+from Module.vnode import VNode
 class ConsistentHashRing:
     def __init__(self,vnode_size):
         self.__list = []
@@ -27,7 +27,7 @@ class ConsistentHashRing:
         position_on_ring = int.from_bytes(bin_64bit, byteorder='big')
 
         node.assign_hash_key(position_on_ring)
-        bisect.insort(self.__list, node, key=lambda x: x.get_hash_key())
+        bisect.insort(self.__list, node, key=lambda x: x.get_hash_key)
         return node
 
     def remove_node(self, building):
@@ -37,9 +37,9 @@ class ConsistentHashRing:
 
         return all_vnode
 
-    def get_vnode_for_guest(self,hash_value):
+    def get_vnode_for_guest(self,hash_value): #binary search treeได้
         for vnode in self.__list:
-            if vnode.get_hash_key() >= hash_value:
+            if vnode.get_hash_key >= hash_value:
                 return vnode
 
         return self.__list[0]
