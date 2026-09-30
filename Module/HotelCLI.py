@@ -25,7 +25,9 @@ class HotelCLI:
             "[0] Quit\n" 
             "[1] Add Guest\n" 
             "[2] Add Building\n" \
-            "[3] Remove Guest\n"
+            "[3] Remove Guest\n" \
+            "[4] Remove Building\n" \
+            "[5] Show Occupied Room\n"
             "-------------------\n")
             inp = input("Enter : ")
             
@@ -49,6 +51,13 @@ class HotelCLI:
                 c = input("c :")
                 s = input("s :")
                 self.handle_remove_guest(c,s)
+            elif inp =="4":
+                building_id = input("Building id :")
+                self.handle_remove_building(building_id)
+            elif inp =="5":
+                self.show_occupied_rooms()
+            else:
+                print("Invalid Input Try Again")
 
     def initialize_system(self):
 
@@ -120,13 +129,16 @@ class HotelCLI:
         return system.add_building(node_id)
     
     def handle_remove_building(self , node_id):
+        try:
+            node_id = int(node_id)
+        except:
+            print("Node it Need to be int")
+            return "Node it Need to be int"
         system = self.get_system
-
         return system.remove_building(node_id)
     
     def handle_search_guest_location(self):
         system = self.get_system
-
         return system.search_guest_location()
     
     def handle_search_guest_by_room_id_and_building_id(self):
@@ -137,7 +149,7 @@ class HotelCLI:
     def show_occupied_rooms(self):
         system = self.get_system
 
-        return system.show_occupied_rooms()
+        return system.show_occupied_room()
     
     def show_load_balance_report(self):
         system = self.get_system

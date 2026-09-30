@@ -98,7 +98,7 @@ class HotelSystem():
                 print("There is some guest in this range already")
                 return
         
-        for x in range(s_start , s_start + n + 1):
+        for x in range(s_start , s_start + n):
             self.add_guest_single(c , x)
         print("Add Batch Succeed")
         return "Add Batch Succeed"
@@ -174,6 +174,7 @@ class HotelSystem():
                 print("This is The Last Buildin")
                 return "This is The Last Building"
             building = self.__buildings[node_id]
+            self.__buildings.pop(node_id)
             old_vnode = self.__ring.remove_node(building)
             
             print(f"Success removing building {node_id}.")
@@ -181,12 +182,12 @@ class HotelSystem():
 
             affected_guest = []
             for room in building.get_RoomAddr:
-                affected_guest.append(room.get_guest)
+                affected_guest.append(room.guest)
             if affected_guest:
                 history = self.migration(affected_guest)
                 for i in history:
                     print(i)
-            self.__buildings.pop(node_id)
+            
             for i in self.__buildings.values():
                 print(f"Building : {i.get_node_id}")
                 print(f"Guest : {len(i.get_RoomAddr)}")
@@ -231,8 +232,19 @@ class HotelSystem():
         else:
             return "node_id not found"
 
-    def show_occupied_room():
-        pass
+    def show_occupied_room(self):
+        Room = []
+        if len(self.__buildings) == 0:
+            print("No existing building yet")
+            return "No existing building yet"
+        print("Occupied room as listed below:")
+        for building in self.__buildings.values():
+            print(f"Building node_id: {building.get_node_id}")
+            for room in building.get_RoomAddr:
+                print(f"Room number: {room.room_no}")
+                Room.append(room)
+
+        return Room
 
     def show_load_balance_report():
         pass
