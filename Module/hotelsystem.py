@@ -174,11 +174,8 @@ class HotelSystem():
                 print("This is The Last Buildin")
                 return "This is The Last Building"
             building = self.__buildings[node_id]
-            self.__buildings.pop(node_id)
-            old_vnode = self.__ring.remove_node(building)
             
-            print(f"Success removing building {node_id}.")
-            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode]) 
+            old_vnode = self.__ring.remove_node(building)
 
             affected_guest = []
             for room in building.get_RoomAddr:
@@ -187,7 +184,10 @@ class HotelSystem():
                 history = self.migration(affected_guest)
                 for i in history:
                     print(i)
-            
+            self.__buildings.pop(node_id)
+            print(f"Success removing building {node_id}.")
+            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode])
+
             for i in self.__buildings.values():
                 print(f"Building : {i.get_node_id}")
                 print(f"Guest : {len(i.get_RoomAddr)}")
