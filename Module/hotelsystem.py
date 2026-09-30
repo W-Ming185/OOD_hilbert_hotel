@@ -126,7 +126,7 @@ class HotelSystem():
         i = bisect_left(self.__guest, guest_id, key=lambda g: g.guest_id)
         if i < len(self.__guest) and self.__guest[i].guest_id == guest_id:
             guest = self.__guest[i]
-            room = guest.room
+            room = guest.get_room
             return (room.node_id, room.room_no)
         return "guest_id not found"
 
