@@ -1,10 +1,13 @@
 import hashlib
 import bisect
+import csv
 from Module.guest import Guest
 from Module.vnode import VNode
 from Module.RoomAddr import RoomAddr
 from Module.Building import Building
 from Module.ConsistentHashRing import ConsistentHashRing
+from Module.CSVExporter import CSVExporter
+
 
 class HotelSystem():
     def __init__(self):
@@ -138,7 +141,9 @@ class HotelSystem():
             vnode_size = self.__ring.get_vnode_size
             for _ in range(vnode_size):
                 self.__ring.add_node(building)
-            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode])
+
+            for x in self.__buildings.values():
+                print(f"node id {x.get_node_id} : {[y.get_hash_key for y in x.get_Vnode]}")
 
             affected_guest = []
             for vnode in building.get_Vnode:
@@ -171,7 +176,7 @@ class HotelSystem():
         
         if node_id in self.__buildings:
             if len(self.__buildings) == 1:
-                print("This is The Last Buildin")
+                print("This is The Last Building")
                 return "This is The Last Building"
             building = self.__buildings[node_id]
             
@@ -186,7 +191,8 @@ class HotelSystem():
                     print(i)
             self.__buildings.pop(node_id)
             print(f"Success removing building {node_id}.")
-            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode])
+            for x in self.__buildings.values():
+                print(f"node id {x.get_node_id} : {[y.get_hash_key for y in x.get_Vnode]}")
 
             for i in self.__buildings.values():
                 print(f"Building : {i.get_node_id}")
@@ -199,12 +205,12 @@ class HotelSystem():
 
 
     def search_guest_location(self,guest_id:tuple):
-        if guest_id in self.__guest:
-            guest = self.__guest.get(guest_id)
-            guestroom = guest.room
-            return (guestroom.node_id,guestroom.room_no)
-        else:
-            return "guest_id not found"
+        i = bisect.bisect_left(self.__guest, guest_id, key=lambda g: g.guest_id)
+        if i < len(self.__guest) and self.__guest[i].guest_id == guest_id:
+            guest = self.__guest[i]
+            room = guest.get_room
+            return (room.node_id, room.room_no)
+        return "guest_id not found"
         
     def migration(self,guest_list):
         history = []
@@ -218,6 +224,7 @@ class HotelSystem():
             old_node.remove_room(room.room_no)
             history.append(f"{guest.guest_id} : {old_node_id} -> {new_node.get_node_id}")
         return history
+        
 
     def search_guest_by_room_id_and_building_id(self,location:tuple):
         node_id,room_no = location
@@ -252,6 +259,28 @@ class HotelSystem():
     def run_benchmark():
         pass
 
-    def export_csv():
+    def export_guest_csv(self):
+        data = []
+        for value in self.__guest:
+            c, s = value.guest_id
+            node_id = value.get_room.node_id
+            room_no = value.get_room.room_no
+            data.append({
+                "channel_id": c,
+                "seat_id": s,
+                "node_id": node_id,
+                "room_no": room_no,
+            })
+
+        CSVExporter.write_csv(
+            "guest.csv", data,
+            fieldnames=["channel_id", "seat_id", "node_id", "room_no"]
+        )
+    
+    def export_migration_csv():#did not test yet
+        data = []
+
+    def export_experiment_csv():
         pass
+
 
