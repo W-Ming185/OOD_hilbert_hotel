@@ -1,6 +1,9 @@
 import hashlib
 import bisect
 import csv
+import time
+import tracemalloc
+
 from decimal import Decimal , getcontext
 from datetime import datetime
 
@@ -62,7 +65,7 @@ class HotelSystem():
     def ring_check(self):
         ring = self.__ring
         if len(ring.get_Vnode) == 0:
-            print("Cannot Insert Guest : No Building To Insert")
+            """print("Cannot Insert Guest : No Building To Insert")"""
             return False
         return  True
     
@@ -73,8 +76,8 @@ class HotelSystem():
             return
         
         if self.guest_dup_check(c,s):
-            print("This id is already exist")
-            return "This id is already exist"
+            """print("This id is already exist")"""
+            return 
         id = (c,s)
         #SHA-256 Hash
         salt = "ball"
@@ -92,9 +95,9 @@ class HotelSystem():
         new_guest = Guest(c,s,position)
         bisect.insort(self.__guest , new_guest , key= lambda x : x.get_hash_value)
         building.add_room(new_guest)
-        print("Add Guest Succeed")
-        self.print_guest()
-        return "Add Guest Succeed"
+        """print("Add Guest Succeed")
+        self.print_guest()"""
+        return new_guest
 
     def add_guest_batch(self , c , s_start , n):
         if not self.ring_check():
@@ -107,13 +110,13 @@ class HotelSystem():
         
         for x in range(s_start , s_start + n):
             self.add_guest_single(c , x)
-        print("Add Batch Succeed")
-        return "Add Batch Succeed"
+        """print("Add Batch Succeed")"""
+        return n
 
     def remove_guest(self , c ,s):
         
         if not self.guest_dup_check(c,s):
-            print("This id does not exist for removal")
+            """print("This id does not exist for removal")"""
             return
         id = (c,s)
         rm_guest = None
@@ -131,9 +134,9 @@ class HotelSystem():
         #reference clearing (จะมีไม่มีก็ได้)
         room.assign_guest(None)
         rm_guest.assign_room(None)
-        self.print_guest()
-        print("Removal Succeed")
-        return "Removal Succeed"
+        """self.print_guest()
+        print("Removal Succeed")"""
+        return rm_guest
 
     def add_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
         if node_id in self.__buildings:
@@ -324,7 +327,17 @@ class HotelSystem():
         print("-"*20)
         return res
 
-    def run_benchmark():
+    def run_benchmark(self):
+        
+        pass
+
+    def start_monitor(self):
+        start = time.perf_counter()
+
+        pass
+
+    def stop_monitor(self):
+        
         pass
 
     def export_guest_csv(self):

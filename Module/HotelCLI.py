@@ -47,15 +47,31 @@ class HotelCLI:
                     "--------------------\n"
                 )
                 method = input("Method : ")
-                self.handle_add_guest(method)
+                res = self.handle_add_guest(method)
+
+                if res is None:
+                    print("Add Guest Failed")
+                else:
+                    print("Add Guest Success")
+                self.print_guest()
+                
             elif inp == "2":
                 building_id = input("Building ID : ")
                 self.handle_add_building(building_id)
+
             elif inp == "3":
                 print("Enter Guest ID for removal : ")
                 c = input("c :")
                 s = input("s :")
-                self.handle_remove_guest(c,s)
+                res = self.handle_remove_guest(c,s)
+
+                if res is None:
+                    print("Remove Failed")
+                else:
+                    print("Remove Success")
+
+                self.print_guest()
+
             elif inp =="4":
                 building_id = input("Building id :")
                 self.handle_remove_building(building_id)
@@ -95,7 +111,7 @@ class HotelCLI:
                 return self.handle_add_single(c , s)
             else:
                 print("Invalid Method")
-                return "Invalid Method"
+                return 
     
     def handle_add_batch(self , c , s_start , n):
         try:
@@ -200,4 +216,8 @@ class HotelCLI:
         system = self.get_system
         return system.export_guest_csv()
 
+    def print_guest(self):
+        system = self.get_system
+        return system.print_guest()
+    
 Hotel = HotelCLI(HotelSystem())
