@@ -131,15 +131,14 @@ class HotelSystem():
     def add_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
         if node_id in self.__buildings:
             print(f"Building {node_id} already exists.")
-            return
+            return None,None
         else:
             building = Building(node_id)
             self.__buildings[node_id] = building
             vnode_size = self.__ring.get_vnode_size
             for _ in range(vnode_size):
                 self.__ring.add_node(building)
-            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode])
-
+            
             affected_guest = []
             for vnode in building.get_Vnode:
                 prev = self.__ring.prev_vnode(vnode) 
@@ -155,24 +154,17 @@ class HotelSystem():
                     end_idx = bisect.bisect_right(self.__guest, new_hash, key=lambda x: x.get_hash_value)
                     affected_guest.extend(self.__guest[start_idx:])
                     affected_guest.extend(self.__guest[:end_idx])
-
+            history = None
             if affected_guest:
                 history = self.migration(affected_guest)
-                for i in history:
-                    print(i)
-            for i in self.__buildings.values():
-                print(f"Building : {i.get_node_id}")
-                print(f"Guest : {len(i.get_RoomAddr)}")
-                for room in i.get_RoomAddr:
-                    print(room.guest.guest_id)
-            return building
+            return self.__buildings,history            
 
     def remove_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
         
         if node_id in self.__buildings:
             if len(self.__buildings) == 1:
                 print("This is The Last Buildin")
-                return "This is The Last Building"
+                return None,None
             building = self.__buildings[node_id]
             
             old_vnode = self.__ring.remove_node(building)
@@ -180,20 +172,12 @@ class HotelSystem():
             affected_guest = []
             for room in building.get_RoomAddr:
                 affected_guest.append(room.guest)
+            history = None
             if affected_guest:
                 history = self.migration(affected_guest)
-                for i in history:
-                    print(i)
+                
             self.__buildings.pop(node_id)
-            print(f"Success removing building {node_id}.")
-            print(self.__buildings,[x.get_hash_key for x in self.__ring.get_Vnode])
-
-            for i in self.__buildings.values():
-                print(f"Building : {i.get_node_id}")
-                print(f"Guest : {len(i.get_RoomAddr)}")
-                for room in i.get_RoomAddr:
-                    print(room.guest.guest_id)
-            return building
+            return self.__buildings,history
         else:
             print(f"{node_id} is not exist.")
 
