@@ -1,10 +1,14 @@
 import hashlib
 import bisect
+import csv
+from decimal import Decimal , getcontext
+
 from Module.guest import Guest
 from Module.vnode import VNode
 from Module.RoomAddr import RoomAddr
 from Module.Building import Building
 from Module.ConsistentHashRing import ConsistentHashRing
+from Module.CSVExporter import CSVExporter
 
 class HotelSystem():
     def __init__(self):
@@ -12,7 +16,7 @@ class HotelSystem():
         self.__guest = []
         # self.__report = Report()
         self.__ring = ConsistentHashRing(vnode_size = 4 )#กำหนดเอง
-        # self.__csvexport = CSVExporter() 
+        self.__csvexport = CSVExporter() 
         # self.__benchmark = BenchmarkResult()
 
     @property
@@ -98,7 +102,7 @@ class HotelSystem():
                 print("There is some guest in this range already")
                 return
         
-        for x in range(s_start , s_start + n):
+        for x in range(s_start , n + 1):
             self.add_guest_single(c , x)
         print("Add Batch Succeed")
         return "Add Batch Succeed"
@@ -183,11 +187,10 @@ class HotelSystem():
 
 
     def search_guest_location(self,guest_id:tuple):
-        if guest_id in self.__guest:
-            guest = self.__guest.get(guest_id)
-            guestroom = guest.room
-            return (guestroom.node_id,guestroom.room_no)
-        else:
+        for i in self.__guest:
+            if i.guest_id == guest_id:
+                room = i.get_room
+                return (room.node_id, room.room_no)
             return "guest_id not found"
         
     def migration(self,guest_list):
@@ -202,19 +205,24 @@ class HotelSystem():
             old_node.remove_room(room.room_no)
             history.append(f"{guest.guest_id} : {old_node_id} -> {new_node.get_node_id}")
         return history
+        
 
-    def search_guest_by_room_id_and_building_id(self,location:tuple):
-        node_id,room_no = location
+    def search_guest_by_room_id_and_building_id(self,node_id , room_no):
         if node_id in self.__buildings:
             building = self.__buildings.get(node_id)
-            for i in building.RoomAddr:
+            for i in building.get_RoomAddr:
                 if i.room_no == room_no:
                     room = i
                     guest = room.guest
-                    return guest.guest_id
-            return "room_no not found"
+                    id = guest.guest_id
+                    print(f"Found! GuestID : {id}")
+                    return id
+            
+            print("Cannot Find Guest : RoomNo Not found")
+            return "RoomNo Not found"
         else:
-            return "node_id not found"
+            print("Cannot Find Guest : NodeID not found")
+            return "NodeID not found"
 
     def show_occupied_room(self):
         Room = []
@@ -230,12 +238,78 @@ class HotelSystem():
 
         return Room
 
-    def show_load_balance_report():
-        pass
+    def show_load_balance_report(self):
+        n = Decimal(str(len(self.__guest)))
+        if n == 0:
+            print("There is no guest to calculate")
+            return
+        
+        n_building = Decimal(str(len(self.__buildings)))
+
+        if n_building == 0:
+            print("There is some guest but there is no building??? There is Some thing wrong in the code")
+            return
+
+        min_load = Decimal("Infinity")
+        max_load = Decimal("-Infinity")
+        
+        res = []
+        getcontext().prec = 4
+        mean = n / n_building
+        sum_squred = 0
+
+        for id , b in self.__buildings.items():
+            b_guest_n = Decimal(str(len(b.get_RoomAddr)))
+            res.append((id , b_guest_n))
+            if b_guest_n < min_load:
+                min_load = Decimal(str(b_guest_n))
+            if b_guest_n > max_load:
+                max_load = Decimal(str(b_guest_n))
+
+            sum_squred += (b_guest_n - mean) ** 2
+
+        getcontext().prec = 4
+        variance = sum_squred / n_building
+        sd = variance.sqrt()
+
+        print("-"*20)
+        print("Number of Guest in Each building : \n" , *res)
+        print(
+        "Load Balance Report\n"
+        f"Min        : {min_load}\n" \
+        f"Max        : {max_load}\n" \
+        f"Mean       : {mean}\n"
+        f"SD         : {sd}\n" \
+        f"Total Guest: {n}")
+        print("-"*20)
+        return res
 
     def run_benchmark():
         pass
 
-    def export_csv():
+    def export_guest_csv(self):
+        data = []
+        for value in self.__guest:
+            c, s = value.guest_id
+            node_id = value.get_room.node_id
+            room_no = value.get_room.room_no
+            data.append({
+                "channel_id": c,
+                "seat_id": s,
+                "node_id": node_id,
+                "room_no": room_no,
+            })
+
+        CSVExporter.write_csv(
+            "guest.csv", data,
+            fieldnames=["channel_id", "seat_id", "node_id", "room_no"]
+        )
+        print("Export Complete...")
+    
+    def export_migration_csv():#did not test yet
+        data = []
+
+    def export_experiment_csv():
         pass
+
 

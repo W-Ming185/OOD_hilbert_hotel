@@ -19,16 +19,21 @@ class HotelCLI:
             
     def run(self):
         # show menu and call method
+        self.handle_add_building(1)
         while True:
             print(
             "-------------------\n"
             "[0] Quit\n" 
             "[1] Add Guest\n" 
-            "[2] Add Building\n" \
+            "[2] Add Building (Building ID 1 Will always be Default)\n" \
             "[3] Remove Guest\n" \
             "[4] Remove Building\n" \
-            "[5] Show Occupied Room\n"
-            "-------------------\n")
+            "[5] Show Occupied Room\n" \
+            "[6] Export CSV\n" \
+            "[7] Show Load Balance Report\n" \
+            "[8] Search Guest *Location* by GuestID(C,S)\n" \
+            "[9] Search Guest *ID* By (BuildingID , RoomNo)\n"
+            "-------------------")
             inp = input("Enter : ")
             
             if inp == "0":
@@ -56,6 +61,20 @@ class HotelCLI:
                 self.handle_remove_building(building_id)
             elif inp =="5":
                 self.show_occupied_rooms()
+            elif inp == "6":
+                self.export_csv()
+            elif inp == "7":
+                self.show_load_balance_report()
+            elif inp == "8":
+                print("Enter GuestID for Searching BuildingID and RoomNo")
+                c = input("c :")
+                s = input("s :")
+                self.handle_search_guest_location(c,s)
+            elif inp == "9":
+                print("Enter BuildingID and RoomNo for Searching GuestID")
+                node_id = input("BuildindID ")
+                room_no = input("RoomNo :")
+                self.handle_search_guest_by_room_id_and_building_id(node_id,room_no)
             else:
                 print("Invalid Input Try Again")
 
@@ -143,8 +162,8 @@ class HotelCLI:
         try:
             node_id = int(node_id)
         except:
-            print("Node it Need to be int")
-            return "Node it Need to be int"
+            print("Need to be int")
+            return "Need to be int"
         system = self.get_system
         building,history = system.remove_building(node_id)
         if building is None:
@@ -160,13 +179,32 @@ class HotelCLI:
                 print(room.guest.guest_id)
 
     def handle_search_guest_location(self):
-        system = self.get_system
-        return system.search_guest_location()
+        return system.remove_building(node_id)
     
-    def handle_search_guest_by_room_id_and_building_id(self):
+    def handle_search_guest_location(self , c ,s):
+        try:
+            c = int(c)
+            s = int(s)
+
+            if c < 0 or s < 0:
+                raise Exception("Input must be positive number")
+        except:
+            print("Error c,s should be int")
+            return "Error c,s should be int"
+        system = self.get_system
+        return system.search_guest_location(c,s)
+    
+    def handle_search_guest_by_room_id_and_building_id(self , node_id , room_no):
+        try:
+            node_id = int(node_id)
+            room_no = int(room_no)
+        except:
+            print("Need to be int")
+            return "Need to be int"
+
         system = self.get_system
 
-        return system.search_guest_by_room_id_and_building_id()
+        return system.search_guest_by_room_id_and_building_id(node_id , room_no)
     
     def show_occupied_rooms(self):
         system = self.get_system
@@ -185,6 +223,6 @@ class HotelCLI:
     
     def export_csv(self):
         system = self.get_system
-        return system.export_csv()
+        return system.export_guest_csv()
 
 Hotel = HotelCLI(HotelSystem())
