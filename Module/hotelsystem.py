@@ -165,6 +165,7 @@ class HotelSystem():
 
             if affected_guest:
                 history = self.migration(affected_guest)
+                self.export_migration_csv(history) #This print migration record everytime there is migration
                 for i in history:
                     print(i)
             for i in self.__buildings.values():
@@ -189,6 +190,7 @@ class HotelSystem():
                 affected_guest.append(room.guest)
             if affected_guest:
                 history = self.migration(affected_guest)
+                self.export_migration_csv(history) #This print migration record everytime there is migration
                 for i in history:
                     print(i)
             self.__buildings.pop(node_id)
@@ -227,7 +229,7 @@ class HotelSystem():
             new_node = new_vnode.get_building
             new_node.add_room(guest)
             old_node.remove_room(room.room_no)
-            history.append(f"{guest.guest_id} : {old_node_id} -> {new_node.get_node_id}")
+            history.append((str(guest.guest_id[0]),str(guest.guest_id[1]),str(old_node_id),"->",str(new_node.get_node_id)))
         return history
         
 
@@ -330,8 +332,11 @@ class HotelSystem():
         )
         print("Export Complete...")
     
-    def export_migration_csv():#did not test yet
-        data = []
+    def export_migration_csv(self, affected_guest):#did not test yet
+        CSVExporter.write_csv(
+            "migration.csv", affected_guest,
+            fieldnames=["channel_id","seat_id", "from_node", "to", "to_node"]
+        )
 
     def export_experiment_csv():
         pass

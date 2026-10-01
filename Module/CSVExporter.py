@@ -10,6 +10,8 @@ class CSVExporter:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
                 writer.writerows(data)
-            else:
+            else: #Now you can write both with or without dictionary but don't forget fieldname (top row to represent data)
                 writer = csv.writer(f)
+                if fieldnames:
+                    writer.writerow(fieldnames)
                 writer.writerows(data)
