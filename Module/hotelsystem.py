@@ -167,7 +167,7 @@ class HotelSystem():
                 history = self.migration(affected_guest)
                 self.export_migration_csv(history) #This print migration record everytime there is migration
                 for i in history:
-                    print(i)
+                    print(f"({i[0]},{i[1]}) have migrate from building {i[2]} -> building {i[4]}")
             for i in self.__buildings.values():
                 print(f"Building : {i.get_node_id}")
                 print(f"Guest : {len(i.get_RoomAddr)}")
@@ -192,7 +192,7 @@ class HotelSystem():
                 history = self.migration(affected_guest)
                 self.export_migration_csv(history) #This print migration record everytime there is migration
                 for i in history:
-                    print(i)
+                    print(f"({i[0]},{i[1]}) have migrate from building {i[2]} -> building {i[4]}")
             self.__buildings.pop(node_id)
             print(f"Success removing building {node_id}.")
             for x in self.__buildings.values():
