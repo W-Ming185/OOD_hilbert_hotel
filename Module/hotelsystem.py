@@ -2,6 +2,7 @@ import hashlib
 import bisect
 import csv
 from decimal import Decimal , getcontext
+from datetime import datetime
 
 from Module.guest import Guest
 from Module.vnode import VNode
@@ -19,6 +20,7 @@ class HotelSystem():
         self.__ring = ConsistentHashRing(vnode_size = 4)#กำหนดเอง
         # self.__csvexport = CSVExporter() 
         # self.__benchmark = BenchmarkResult()
+        self.__migration_history = []
 
     @property
     def ring(self):
@@ -164,8 +166,9 @@ class HotelSystem():
                     affected_guest.extend(self.__guest[:end_idx])
 
             if affected_guest:
-                history = self.migration(affected_guest)
-                self.export_migration_csv(history) #This print migration record everytime there is migration
+                history = self.migration(affected_guest,"add")
+                self.__migration_history.append(history)
+                self.export_migration_csv() #This print migration record everytime there is migration
                 for i in history:
                     print(f"({i[0]},{i[1]}) have migrate from building {i[2]} -> building {i[4]}")
             for i in self.__buildings.values():
@@ -189,8 +192,9 @@ class HotelSystem():
             for room in building.get_RoomAddr:
                 affected_guest.append(room.guest)
             if affected_guest:
-                history = self.migration(affected_guest)
-                self.export_migration_csv(history) #This print migration record everytime there is migration
+                history = self.migration(affected_guest,"remove")
+                self.__migration_history.append(history)
+                self.export_migration_csv() #This print migration record everytime there is migration
                 for i in history:
                     print(f"({i[0]},{i[1]}) have migrate from building {i[2]} -> building {i[4]}")
             self.__buildings.pop(node_id)
@@ -208,18 +212,14 @@ class HotelSystem():
             print(f"{node_id} is not exist.")
 
 
-    def search_guest_location(self, c , s):
-        guest_id = (c,s)
-        i = bisect.bisect_left(self.__guest, guest_id, key=lambda g: g.guest_id)
-        if i < len(self.__guest) and self.__guest[i].guest_id == guest_id:
-            guest = self.__guest[i]
-            room = guest.get_room
-            print(f"Found! NodeID : {room.node_id} RoomNo:{room.room_no}")
-            return (room.node_id, room.room_no)
-        print("Cannot Find Guest Location : GuestID Not Found")
+    def search_guest_location(self,guest_id:tuple):
+        for i in self.__guest:
+            if i.guest_id == guest_id:
+                room = i.get_room
+                return (room.node_id, room.room_no)
         return "guest_id not found"
         
-    def migration(self,guest_list):
+    def migration(self, guest_list, event_type):
         history = []
         for guest in guest_list:
             room = guest.get_room
@@ -229,7 +229,19 @@ class HotelSystem():
             new_node = new_vnode.get_building
             new_node.add_room(guest)
             old_node.remove_room(room.room_no)
-            history.append((str(guest.guest_id[0]),str(guest.guest_id[1]),str(old_node_id),"->",str(new_node.get_node_id)))
+            if event_type == "add":
+                changed = new_node.get_node_id
+            elif event_type == "remove":
+                changed = old_node_id
+
+            history.append((str(len(self.__migration_history)+1), #migration_number
+                            event_type, #event_type
+                            str(changed),#node_changed
+                            str(guest.guest_id[0]), #channel_id
+                            str(guest.guest_id[1]), #sequence_id
+                            old_node_id, #node_from
+                            new_node.get_node_id, #node_to
+                            guest.get_room.room_no)) #guest new room_no
         return history
         
 
@@ -249,6 +261,8 @@ class HotelSystem():
         else:
             print("Cannot Find Guest : NodeID not found")
             return "NodeID not found"
+
+        
 
     def show_occupied_room(self):
         Room = []
@@ -332,11 +346,29 @@ class HotelSystem():
         )
         print("Export Complete...")
     
-    def export_migration_csv(self, affected_guest):#did not test yet
+    def export_migration_csv(self):#did not test yet
+        data = []
+        for migration in self.__migration_history:
+            for affected_guest in migration:
+
+                data.append(
+                    (affected_guest[0],#migration_number
+                    affected_guest[1],#event_type
+                    affected_guest[2],#node_changed
+                    affected_guest[3],#channel_id
+                    affected_guest[4],#sequence_id
+                    affected_guest[5],#node_from
+                    affected_guest[6],#node_to
+                    affected_guest[7])#guest new room_no
+                )
         CSVExporter.write_csv(
-            "migration.csv", affected_guest,
-            fieldnames=["channel_id","seat_id", "from_node", "to", "to_node"]
-        )
+                    "migration.csv", data,
+                    fieldnames=["migration_number", "event_type",
+                                "node_changed", "channel_id", "seat_id",
+                                "from_node", "to_node", "room_no"],
+                )
+
+        
 
     def export_experiment_csv():
         pass

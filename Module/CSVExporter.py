@@ -1,7 +1,7 @@
 import csv
 class CSVExporter:
     @staticmethod
-    def write_csv(filename, data, fieldnames=None):
+    def write_csv(filename, data,  fieldnames=None):
         with open(filename, "w", newline="", encoding="utf-8") as f:
             if not data:
                 return
@@ -15,3 +15,4 @@ class CSVExporter:
                 if fieldnames:
                     writer.writerow(fieldnames)
                 writer.writerows(data)
+

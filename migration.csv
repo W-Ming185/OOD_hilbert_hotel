@@ -1,7 +1,4 @@
-channel_id,seat_id,from_node,to,to_node
-1,6,2,->,1
-1,7,2,->,1
-1,10,2,->,1
-1,11,2,->,1
-1,12,2,->,1
-1,14,2,->,1
+migration_number,event_type,node_changed,channel_id,seat_id,from_node,to_node,room_no
+1,add,-2,1,10,1,-2,55
+2,remove,-2,1,10,-2,1,55
+3,add,2,1,10,1,2,55

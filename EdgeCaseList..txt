@@ -1,0 +1,85 @@
+[1]Add Guest
+-guest already exist
+[1.1] Method
+    -char
+    -special (!)
+    -space bar (None)
+    -out of range (0 or 3)
+
+[1.2] Batch
+    [1.2.1] Batch c
+        -char
+        -special (!)
+        -space bar (None)
+        -negative int
+    
+    [1.2.2] Batch s
+        -char
+        -special (!)
+        -space bar (None)
+        -negative int
+        -start is more than n
+    
+    [1.2.3] Batch n
+        -char
+        -special (!)
+        -space bar (None)
+        -negative int
+    
+[1.3] Single
+    [1.3.1] Single c
+        -char
+        -special (!)
+        -space bar (None)
+        -negative int
+    
+    [1.3.2] Single s
+        -char
+        -special (!)
+        -space bar (None)
+        -negative int
+
+[2] Add building
+-building already exist
+-int
+-list
+-spacebar
+-special (!)
+-negative
+
+[3] Remove Guest
+-guest did not exist
+    [3.1] Remove Guest c
+        -char
+        -list
+    [3.2] Remove Guest s
+        -char
+        -list
+
+
+[4] Buidling
+-building did not exist
+-char
+-spacebar
+
+[8] Search Guest *Location* by GuestID
+-guest not exist
+-used to exist
+    [3.1] Search Guest c
+        -char
+        -list
+    [3.2] Search Guest s
+        -char
+        -list
+
+[9] Search Guest *ID *Location* by GuestID
+    [3.1] Search Guest *ID building ID
+        -non-exist building
+        -char
+        -list
+        -spacebar
+    [3.2] Search Guest *ID room NO
+        -non-exist room
+        -char
+        -list
+        -spacebar
