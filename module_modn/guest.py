@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from Module.RoomAddr import RoomAddr
+    from module_modn.RoomAddr import RoomAddr
 class Guest():
     def __init__(self,c,s,hash_value):
         self.__room = None

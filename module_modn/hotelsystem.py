@@ -3,12 +3,12 @@ import bisect
 import csv
 from decimal import Decimal , getcontext
 
-from Module.guest import Guest
-from Module.vnode import VNode
-from Module.RoomAddr import RoomAddr
-from Module.Building import Building
-from Module.ConsistentHashRing import ConsistentHashRing
-from Module.CSVExporter import CSVExporter
+from module_modn.guest import Guest
+from module_modn.class_modn import HashMod
+from module_modn.RoomAddr import RoomAddr
+from module_modn.Building import Building
+from module_modn.CSVExport import CSVExporter
+
 
 
 class HotelSystem():
@@ -16,13 +16,13 @@ class HotelSystem():
         self.__buildings = {}
         self.__guest = []
         # self.__report = Report()
-        self.__ring = ConsistentHashRing(vnode_size = 4)#กำหนดเอง
+        self.__hashmod = HashMod()
         # self.__csvexport = CSVExporter() 
         # self.__benchmark = BenchmarkResult()
 
     @property
-    def ring(self):
-        return self.__ring
+    def hashmod(self):
+        return self.__hashmod
     @property
     def guest(self):
         return self.__guest
@@ -57,17 +57,16 @@ class HotelSystem():
                 return True
         return False
     
-    def ring_check(self):
-        ring = self.__ring
-        if len(ring.get_Vnode) == 0:
+    def hashmod_check(self):
+        if self.__hashmod.no_building == 0:
             print("Cannot Insert Guest : No Building To Insert")
             return False
-        return  True
+        return True
     
     # ! ! ! No edge case yet ! ! !
     def add_guest_single(self, c , s):
         
-        if not self.ring_check():
+        if not self.hashmod_check():
             return
         
         if self.guest_dup_check(c,s):
@@ -83,12 +82,12 @@ class HotelSystem():
 
         position = int.from_bytes(hash_num_64bit, byteorder='big')
 
-        #Adding into the ring
-        ring = self.ring
-        vnode_to_be_inserted = ring.get_vnode_for_guest(position)
-        building = vnode_to_be_inserted.get_building
+        # modn
+        building = self.__hashmod.get_building(position)
+        # create_geust
         new_guest = Guest(c,s,position)
         bisect.insort(self.__guest , new_guest , key= lambda x : x.get_hash_value)
+        # put_into_building
         building.add_room(new_guest)
         print("Add Guest Succeed")
         self.print_guest()
@@ -133,78 +132,45 @@ class HotelSystem():
         print("Removal Succeed")
         return "Removal Succeed"
 
-    def add_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
+    def add_building(self, node_id):
+
         if node_id in self.__buildings:
             print(f"Building {node_id} already exists.")
             return
-        else:
-            building = Building(node_id)
-            self.__buildings[node_id] = building
-            vnode_size = self.__ring.get_vnode_size
-            for _ in range(vnode_size):
-                self.__ring.add_node(building)
+        building = Building(node_id)
+        # เพิ่ม Building เข้า HotelSystem
+        self.__buildings[node_id] = building
+        # เพิ่ม Building เข้า Mod-N
+        self.__hashmod.add_building(building)
+        # ต้องตรวจ Guest ใหม่ทั้งหมด
+        affected_guest = list(self.__guest)
+        if affected_guest:
+            history = self.migration(affected_guest)
+            for i in history:
+                print(i)
+        print(f"Success adding building {node_id}.")
+        return building
 
-            for x in self.__buildings.values():
-                print(f"node id {x.get_node_id} : {[y.get_hash_key for y in x.get_Vnode]}")
-
-            affected_guest = []
-            for vnode in building.get_Vnode:
-                prev = self.__ring.prev_vnode(vnode) 
-                prev_hash = prev.get_hash_key
-                new_hash = vnode.get_hash_key
-
-                if prev_hash < new_hash:
-                    start_idx = bisect.bisect_right(self.__guest, prev_hash, key=lambda x: x.get_hash_value)
-                    end_idx = bisect.bisect_right(self.__guest, new_hash, key=lambda x: x.get_hash_value)
-                    affected_guest.extend(self.__guest[start_idx:end_idx])
-                else:
-                    start_idx = bisect.bisect_right(self.__guest, prev_hash, key=lambda x: x.get_hash_value)
-                    end_idx = bisect.bisect_right(self.__guest, new_hash, key=lambda x: x.get_hash_value)
-                    affected_guest.extend(self.__guest[start_idx:])
-                    affected_guest.extend(self.__guest[:end_idx])
-
-            if affected_guest:
-                history = self.migration(affected_guest)
-                for i in history:
-                    print(i)
-            for i in self.__buildings.values():
-                print(f"Building : {i.get_node_id}")
-                print(f"Guest : {len(i.get_RoomAddr)}")
-                for room in i.get_RoomAddr:
-                    print(room.guest.guest_id)
-            return building
-
-    def remove_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
-        
-        if node_id in self.__buildings:
-            if len(self.__buildings) == 1:
-                print("This is The Last Building")
-                return "This is The Last Building"
-            building = self.__buildings[node_id]
-            
-            old_vnode = self.__ring.remove_node(building)
-
-            affected_guest = []
-            for room in building.get_RoomAddr:
-                affected_guest.append(room.guest)
-            if affected_guest:
-                history = self.migration(affected_guest)
-                for i in history:
-                    print(i)
-            self.__buildings.pop(node_id)
-            print(f"Success removing building {node_id}.")
-            for x in self.__buildings.values():
-                print(f"node id {x.get_node_id} : {[y.get_hash_key for y in x.get_Vnode]}")
-
-            for i in self.__buildings.values():
-                print(f"Building : {i.get_node_id}")
-                print(f"Guest : {len(i.get_RoomAddr)}")
-                for room in i.get_RoomAddr:
-                    print(room.guest.guest_id)
-            return building
-        else:
+    def remove_building(self, node_id):
+        if node_id not in self.__buildings:
             print(f"{node_id} is not exist.")
-
+            return
+        if len(self.__buildings) == 1:
+            print("This is The Last Building")
+            return "This is The Last Building"
+        building = self.__buildings[node_id]
+        # Remove จาก Mod-N ก่อน
+        self.__hashmod.remove_building(node_id)
+        # N เปลี่ยน → Guest ทั้งหมดอาจต้องเปลี่ยนตำแหน่ง
+        affected_guest = list(self.__guest)
+        if affected_guest:
+            history = self.migration(affected_guest)
+            for i in history:
+                print(i)
+        # Migration เสร็จแล้วค่อยเอา Building ออกจาก HotelSystem
+        self.__buildings.pop(node_id)
+        print(f"Success removing building {node_id}.")
+        return building
 
     def search_guest_location(self, c , s):
         guest_id = (c,s)
@@ -217,20 +183,26 @@ class HotelSystem():
         print("Cannot Find Guest Location : GuestID Not Found")
         return "guest_id not found"
         
-    def migration(self,guest_list):
+    def migration(self, guest_list):
         history = []
         for guest in guest_list:
             room = guest.get_room
             old_node_id = room.node_id
-            old_node = self.__buildings[old_node_id]
-            new_vnode = self.__ring.get_vnode_for_guest(guest.get_hash_value)
-            new_node = new_vnode.get_building
+            # หา Building ใหม่
+            new_node = self.__hashmod.get_building(guest.get_hash_value)
+            if new_node.get_node_id == old_node_id:
+                continue
+            # Building เก่า
+            old_node = self.__buildings.get(old_node_id)
+            if old_node is not None:
+                old_node.remove_room(room.room_no)
             new_node.add_room(guest)
-            old_node.remove_room(room.room_no)
-            history.append(f"{guest.guest_id} : {old_node_id} -> {new_node.get_node_id}")
+            history.append(
+                f"{guest.guest_id} : "
+                f"{old_node_id} -> "
+                f"{new_node.get_node_id}")
         return history
-        
-
+    
     def search_guest_by_room_id_and_building_id(self,node_id , room_no):
         if node_id in self.__buildings:
             building = self.__buildings.get(node_id)
