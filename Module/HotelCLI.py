@@ -71,7 +71,7 @@ class HotelCLI:
                     print("Remove Success")
 
                 self.print_guest()
-
+                
             elif inp =="4":
                 building_id = input("Building id :")
                 self.handle_remove_building(building_id)
@@ -110,7 +110,7 @@ class HotelCLI:
                 s = self._read_int("s")
                 return self.handle_add_single(c , s)
             else:
-                print("Invalid Method")
+                """print("Invalid Method")"""
                 return 
     
     def handle_add_batch(self , c , s_start , n):
@@ -121,8 +121,8 @@ class HotelCLI:
             if c < 0 or s_start < 0 or n < 0:
                 raise Exception("Input must be positive number")
         except:
-            print("Error c,s_start,n should be int")
-            return "Error c,s_start,n should be int"
+            """print("Error c,s_start,n should be int")"""
+            return 
         system = self.get_system
         return system.add_guest_batch(c , s_start , n)
 
@@ -133,8 +133,8 @@ class HotelCLI:
             if c < 0 or s < 0:
                 raise Exception("Input must be positive number")
         except:
-            print("Error c,s should be int")
-            return "Error c,s should be int"
+            """print("Error c,s should be int")"""
+            return 
         
         system = self.get_system
         return system.add_guest_single(c , s)
@@ -148,7 +148,7 @@ class HotelCLI:
                 raise Exception("Input must be positive number")
         except:
             print("Error c,s should be int")
-            return "Error c,s should be int"
+            return 
         
         system = self.get_system
         return system.remove_guest(c , s)
@@ -209,7 +209,7 @@ class HotelCLI:
     
     def run_benchmark(self):
         system = self.get_system
-
+        
         return system.run_benchmark()
     
     def export_csv(self):
