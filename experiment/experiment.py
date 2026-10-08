@@ -3,15 +3,17 @@ import tracemalloc
 import time
 
 def build_guest_id(n, c):
-    """
-        ยังไม่รองรับกรณีหารไม่ลงตัว
-    """
+
     each_c = n // c
+    left_over = n % c
     res = []
     for i in range(1 , c+1):
         for j in range(each_c):
                     #   c   s
             res.append((i , j))
+        if left_over > 0:
+            res.append((i , each_c))
+            left_over-=1
     
     return res
 
