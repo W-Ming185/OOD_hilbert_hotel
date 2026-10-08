@@ -15,7 +15,7 @@ class HotelSystem():
         self.__buildings = {}
         self.__guest = []
         # self.__report = Report()
-        self.__ring = ConsistentHashRing(vnode_size = 4 )#กำหนดเอง
+        self.__ring = None#กำหนดเอง
         self.__csvexport = CSVExporter() 
         # self.__benchmark = BenchmarkResult()
 
@@ -38,6 +38,14 @@ class HotelSystem():
             res.append(data)
         return res
     
+    def set_vnode_size(self,size):
+        try:
+            size = int(size)
+        except:
+            return 0
+        if self.__ring is None:
+            self.__ring = ConsistentHashRing(size)
+        return 1
     def print_guest(self):
         ls = self.guest_data_list
         print("-----------------")

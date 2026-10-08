@@ -19,7 +19,11 @@ class HotelCLI:
             
     def run(self):
         # show menu and call method
-        self.handle_add_building(1)
+        while True:
+            size = input("Enter Vnode size : ")
+            if self.__system.set_vnode_size(size):
+                break
+            print("Invalid Input")
         while True:
             print(
             "-------------------\n"
