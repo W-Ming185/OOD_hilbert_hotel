@@ -1,4 +1,4 @@
-from Module import HotelCLI
+from Module.hotelsystem import HotelSystem
 import tracemalloc
 import time
 
@@ -23,10 +23,17 @@ def experiment_1():
     res = []    
     #consistent_hash
     for k in K:        
-        system = HotelCLI()
+        system = HotelSystem()
         guest_id_list = build_guest_id(k , 10)
+        system.set_vnode_size(V)
+        for i in range(0,N+1):
+            system.add_building(i+1)
+
+        
         tracemalloc.start()
         start_time = time.perf_counter()
+        for guest in guest_id_list:
+            system.add_guest_single(guest[0],guest[1])
         '''
             ทำการทดลอง
             - จัดแขก
@@ -60,8 +67,21 @@ def experiment_2():
     V = 32
     #consistent_hash
     for n in N:
+        system = HotelSystem()
+        guest_list = build_guest_id(K , 10)
+
+        for i in range(0,n):
+            system.add_building(i+1)
+
+        for guest in guest_list:
+            system.add_guest_single(guest[0],guest[1])
         tracemalloc.start()
         start_time = time.perf_counter()
+
+        new_building_id = n+1
+        system.add_building(new_building_id)
+
+        system.remove_building(new_building_id)
         """
             ทำการทดลอง
         """
@@ -89,8 +109,13 @@ def experiment_3():
     K = 10000
     #consistent_hash
     for v in V:
+        system = HotelSystem()
+        system.set_vnode_size = v
+        for i in range(N):
+            system.add_building(i+1)
         tracemalloc.start()
         start_time = time.perf_counter()
+
         """
             ทำการทดลอง
         """
