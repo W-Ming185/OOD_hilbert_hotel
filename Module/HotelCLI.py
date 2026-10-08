@@ -181,9 +181,6 @@ class HotelCLI:
             print(f"Guest : {len(i.get_RoomAddr)}")
             for room in i.get_RoomAddr:
                 print(room.guest.guest_id)
-
-    def handle_search_guest_location(self):
-        return system.remove_building(node_id)
     
     def handle_search_guest_location(self , c ,s):
         try:
