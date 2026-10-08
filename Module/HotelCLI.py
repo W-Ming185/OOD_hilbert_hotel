@@ -19,7 +19,11 @@ class HotelCLI:
             
     def run(self):
         # show menu and call method
-        self.handle_add_building(1)
+        while True:
+            size = input("Enter Vnode size : ")
+            if self.__system.set_vnode_size(size):
+                break
+            print("Invalid Input")
         while True:
             print(
             "-------------------\n"
@@ -161,7 +165,18 @@ class HotelCLI:
             return "Node it Need to be int"
         system = self.get_system
 
-        return system.add_building(node_id)
+        building,history = system.add_building(node_id)
+        if building is None:
+            return
+        if history is not None:
+            for i in history:
+                print(i)
+
+        for i in building.values():
+            print(f"Building : {i.get_node_id} , {[i.get_hash_key for i in i.get_Vnode]}")
+            print(f"Guest : {len(i.get_RoomAddr)}")
+            for room in i.get_RoomAddr:
+                print(room.guest.guest_id)
     
     def handle_remove_building(self , node_id):
         try:
@@ -170,7 +185,18 @@ class HotelCLI:
             print("Need to be int")
             return "Need to be int"
         system = self.get_system
-        return system.remove_building(node_id)
+        building,history = system.remove_building(node_id)
+        if building is None:
+            return
+        if history is not None:
+            for i in history:
+                print(i)
+
+        for i in building.values():
+            print(f"Building : {i.get_node_id} , {[i.get_hash_key for i in i.get_Vnode]}")
+            print(f"Guest : {len(i.get_RoomAddr)}")
+            for room in i.get_RoomAddr:
+                print(room.guest.guest_id)
     
     def handle_search_guest_location(self , c ,s):
         try:
