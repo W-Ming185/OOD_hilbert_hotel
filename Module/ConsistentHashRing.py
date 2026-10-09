@@ -38,11 +38,10 @@ class ConsistentHashRing:
         return all_vnode
 
     def get_vnode_for_guest(self,hash_value): #binary search treeได้
-        for vnode in self.__list:
-            if vnode.get_hash_key >= hash_value:
-                return vnode
-
-        return self.__list[0]
+        index = bisect.bisect_left(self.__list,hash_value)
+        if index >= len(self.__list):
+            index = 0
+        return self.__list[index]
 
     def prev_vnode(self,vnode):
         index = self.__list.index(vnode)
