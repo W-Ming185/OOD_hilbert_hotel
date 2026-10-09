@@ -38,7 +38,7 @@ class ConsistentHashRing:
         return all_vnode
 
     def get_vnode_for_guest(self,hash_value): #binary search treeได้
-        index = bisect.bisect_left(self.__list,hash_value)
+        index = bisect.bisect_left(self.__list, hash_value, key=lambda x: x.get_hash_key)
         if index >= len(self.__list):
             index = 0
         return self.__list[index]
