@@ -175,7 +175,7 @@ class HotelSystem():
         
         if node_id in self.__buildings:
             if len(self.__buildings) == 1:
-                print("This is The Last Buildin")
+                print("This is The Last Building")
                 return None,None
             building = self.__buildings[node_id]
             
@@ -192,8 +192,8 @@ class HotelSystem():
             return self.__buildings,history
         else:
             print(f"{node_id} is not exist.")
-
-
+            return None,None
+        
     def search_guest_location(self,guest_id:tuple):
         for i in self.__guest:
             if i.guest_id == guest_id:
