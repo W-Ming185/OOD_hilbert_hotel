@@ -20,7 +20,7 @@ def build_guest_id(n, c):
 
 def experiment_1():
     print("Experiment 1 : ")
-    K = [1000 , 10000 , 200000,400000]
+    K = [1000 , 10000 , 100000]
     N = 10
     V = 32
     res = []    
