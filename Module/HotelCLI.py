@@ -11,11 +11,9 @@ class HotelCLI:
 
     def _read_int(self , text : str):
         try:
-            print(f"{text} : ",end="")
-            inp = int(input(""))
-            return inp
-        except:
-            raise Exception("Error")
+            return int(input(f"{text} : "))
+        except ValueError:
+            raise ValueError(f"{text} must be an integer")
             
     def run(self):
         salt = input("Enter Salt : ")
@@ -40,49 +38,52 @@ class HotelCLI:
             "[8] Search Guest *Location* by GuestID(C,S)\n" \
             "[9] Search Guest *ID* By (BuildingID , RoomNo)\n"
             "-------------------")
-            inp = input("Enter : ")
+            inp = input("Enter : ").strip()
             
-            if inp == "0":
-                return 
-            elif inp == "1":
-                print(
-                    "--------------------\n"
-                    "Add Guest Method:\n"
-                    "[1] Batch\n"
-                    "[2] Single\n" 
-                    "--------------------\n"
-                )
-                method = input("Method : ")
-                self.handle_add_guest(method)
-            elif inp == "2":
-                building_id = input("Building ID : ")
-                self.handle_add_building(building_id)
-            elif inp == "3":
-                print("Enter Guest ID for removal : ")
-                c = input("c :")
-                s = input("s :")
-                self.handle_remove_guest(c,s)
-            elif inp =="4":
-                building_id = input("Building id :")
-                self.handle_remove_building(building_id)
-            elif inp =="5":
-                self.show_occupied_rooms()
-            elif inp == "6":
-                self.export_csv()
-            elif inp == "7":
-                self.show_load_balance_report()
-            elif inp == "8":
-                print("Enter GuestID for Searching BuildingID and RoomNo")
-                c = input("c :")
-                s = input("s :")
-                self.handle_search_guest_location(c,s)
-            elif inp == "9":
-                print("Enter BuildingID and RoomNo for Searching GuestID")
-                node_id = input("BuildindID ")
-                room_no = input("RoomNo :")
-                self.handle_search_guest_by_room_id_and_building_id(node_id,room_no)
-            else:
-                print("Invalid Input Try Again")
+            try:
+                if inp == "0":
+                    return 
+                elif inp == "1":
+                    print(
+                        "--------------------\n"
+                        "Add Guest Method:\n"
+                        "[1] Batch\n"
+                        "[2] Single\n" 
+                        "--------------------\n"
+                    )
+                    method = input("Method : ")
+                    self.handle_add_guest(method)
+                elif inp == "2":
+                    building_id = input("Building ID : ")
+                    self.handle_add_building(building_id)
+                elif inp == "3":
+                    print("Enter Guest ID for removal : ")
+                    c = input("c :")
+                    s = input("s :")
+                    self.handle_remove_guest(c,s)
+                elif inp =="4":
+                    building_id = input("Building id :")
+                    self.handle_remove_building(building_id)
+                elif inp =="5":
+                    self.show_occupied_rooms()
+                elif inp == "6":
+                    self.export_csv()
+                elif inp == "7":
+                    self.show_load_balance_report()
+                elif inp == "8":
+                    print("Enter GuestID for Searching BuildingID and RoomNo")
+                    c = input("c :")
+                    s = input("s :")
+                    print(self.handle_search_guest_location(c,s))
+                elif inp == "9":
+                    print("Enter BuildingID and RoomNo for Searching GuestID")
+                    node_id = input("BuildindID ")
+                    room_no = input("RoomNo :")
+                    print(self.handle_search_guest_by_room_id_and_building_id(node_id,room_no))
+                else:
+                    print("Invalid Input Try Again")
+            except (ValueError, TypeError) as e:
+                print(f"Invalid input : {e}")
 
     def initialize_system(self):
 
@@ -108,7 +109,7 @@ class HotelCLI:
             c = int(c)
             s_start = int(s_start)
             n = int(n)
-            if c < 0 or s_start < 0 or n < 0:
+            if c < 1 or s_start < 1 or n < 0:
                 raise Exception("Input must be positive number")
         except:
             print("Error c,s_start,n should be int")
@@ -120,7 +121,7 @@ class HotelCLI:
         try:
             c = int(c)
             s = int(s)
-            if c < 0 or s < 0:
+            if c < 1 or s < 1:
                 raise Exception("Input must be positive number")
         except:
             print("Error c,s should be int")
@@ -134,7 +135,7 @@ class HotelCLI:
             c = int(c)
             s = int(s)
 
-            if c < 0 or s < 0:
+            if c < 1 or s < 1:
                 raise Exception("Input must be positive number")
         except:
             print("Error c,s should be int")
@@ -159,10 +160,7 @@ class HotelCLI:
                 print(i)
 
         for i in building.values():
-            print(f"Building : {i.get_node_id} , {[i.get_hash_key for i in i.get_Vnode]}")
-            print(f"Guest : {len(i.get_RoomAddr)}")
-            for room in i.get_RoomAddr:
-                print(room.guest.guest_id)
+            print(f"Building : {i.get_node_id} | Guest : {len(i.get_RoomAddr)}")
     
     def handle_remove_building(self , node_id):
         try:
@@ -179,23 +177,20 @@ class HotelCLI:
                 print(i)
 
         for i in building.values():
-            print(f"Building : {i.get_node_id} , {[i.get_hash_key for i in i.get_Vnode]}")
-            print(f"Guest : {len(i.get_RoomAddr)}")
-            for room in i.get_RoomAddr:
-                print(room.guest.guest_id)
+            print(f"Building : {i.get_node_id} | Guest : {len(i.get_RoomAddr)}")
     
     def handle_search_guest_location(self , c ,s):
         try:
             c = int(c)
             s = int(s)
 
-            if c < 0 or s < 0:
+            if c < 1 or s < 1:
                 raise Exception("Input must be positive number")
         except:
             print("Error c,s should be int")
             return "Error c,s should be int"
         system = self.get_system
-        return system.search_guest_location(c,s)
+        return system.search_guest_location((c,s))
     
     def handle_search_guest_by_room_id_and_building_id(self , node_id , room_no):
         try:

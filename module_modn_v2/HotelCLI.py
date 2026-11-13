@@ -1,96 +1,221 @@
-from __future__ import annotations
-
-from .hotelsystem import HotelSystem
-
+from module_modn_v2.hotelsystem import HotelSystem
 
 class HotelCLI:
-    def __init__(self, system: HotelSystem):
+    def __init__(self,system : HotelSystem):
         self.__system = system
+        self.run()
 
     @property
-    def get_system(self) -> HotelSystem:
+    def get_system(self):
         return self.__system
 
-    @staticmethod
-    def _read_int(prompt: str) -> int:
-        return int(input(f"{prompt}: "))
-
-    def _print_migration_report(self) -> None:
-        system = self.__system
-        print(f"Guests moved: {system.last_migration_count}")
-        if system.last_migration_rate is None:
-            print("Migration rate: not calculated (no guests)")
-        else:
-            print(f"Migration rate: {system.last_migration_rate}")
-        for move in system.last_migration:
-            print(f"Guest ({move['channel_id']}, {move['sequence_id']}): "
-                  f"Building {move['old_node_id']} -> {move['new_node_id']}, "
-                  f"room {move['room_no']}")
-
-    def run(self) -> None:
-        if not self.__system.buildings:
-            self.__system.add_building(1)
+    def _read_int(self , text : str):
+        try:
+            return int(input(f"{text} : "))
+        except ValueError:
+            raise ValueError(f"{text} must be an integer")
+            
+    def run(self):
+        salt = input("Enter Salt : ")
+        self.__system.set_salt(salt)
+        # show menu and call method
         while True:
-            print("\n[0] Quit  [1] Add guest  [2] Add building  [3] Remove guest\n"
-                  "[4] Remove building  [5] List rooms  [6] Export CSV\n"
-                  "[7] Load report  [8] Find guest  [9] Find room")
-            choice = input("Enter: ").strip()
+            print(
+            "-------------------\n"
+            "[0] Quit\n" 
+            "[1] Add Guest\n" 
+            "[2] Add Building\n" \
+            "[3] Remove Guest\n" \
+            "[4] Remove Building\n" \
+            "[5] Show Occupied Room\n" \
+            "[6] Export CSV\n" \
+            "[7] Show Load Balance Report\n" \
+            "[8] Search Guest *Location* by GuestID(C,S)\n" \
+            "[9] Search Guest *ID* By (BuildingID , RoomNo)\n"
+            "-------------------")
+            inp = input("Enter : ").strip()
+            
             try:
-                if choice == "0":
-                    return
-                if choice == "1":
-                    mode = input("[1] Batch [2] Single: ").strip()
-                    if mode == "1":
-                        print(self.__system.add_guest_batch(self._read_int("c"), self._read_int("s start"), self._read_int("count")))
-                    elif mode == "2":
-                        print(self.__system.add_guest_single(self._read_int("c"), self._read_int("s")))
-                    else:
-                        print("Invalid method")
-                elif choice == "2":
-                    print(self.__system.add_building(self._read_int("Building ID")))
-                    self._print_migration_report()
-                elif choice == "3":
-                    print(self.__system.remove_guest(self._read_int("c"), self._read_int("s")))
-                elif choice == "4":
-                    print(self.__system.remove_building(self._read_int("Building ID")))
-                    self._print_migration_report()
-                elif choice == "5":
-                    rooms = self.__system.show_occupied_room()
-                    if isinstance(rooms, str):
-                        print(rooms)
-                        continue
-                    for room in rooms:
-                        print(room.node_id, room.room_no, room.guest.guest_id if room.guest else None)
-                elif choice == "6":
-                    self.__system.export_guest_csv()
-                    print("Export complete")
-                elif choice == "7":
-                    print(self.__system.show_load_balance_report())
-                elif choice == "8":
-                    print(self.__system.search_guest_location(self._read_int("c"), self._read_int("s")))
-                elif choice == "9":
-                    print(self.__system.search_guest_by_room_id_and_building_id(self._read_int("Building ID"), self._read_int("Room number")))
+                if inp == "0":
+                    return 
+                elif inp == "1":
+                    print(
+                        "--------------------\n"
+                        "Add Guest Method:\n"
+                        "[1] Batch\n"
+                        "[2] Single\n" 
+                        "--------------------\n"
+                    )
+                    method = input("Method : ")
+                    self.handle_add_guest(method)
+                elif inp == "2":
+                    building_id = input("Building ID : ")
+                    self.handle_add_building(building_id)
+                elif inp == "3":
+                    print("Enter Guest ID for removal : ")
+                    c = input("c :")
+                    s = input("s :")
+                    self.handle_remove_guest(c,s)
+                elif inp =="4":
+                    building_id = input("Building id :")
+                    self.handle_remove_building(building_id)
+                elif inp =="5":
+                    self.show_occupied_rooms()
+                elif inp == "6":
+                    self.export_csv()
+                elif inp == "7":
+                    self.show_load_balance_report()
+                elif inp == "8":
+                    print("Enter GuestID for Searching BuildingID and RoomNo")
+                    c = input("c :")
+                    s = input("s :")
+                    print(self.handle_search_guest_location(c,s))
+                elif inp == "9":
+                    print("Enter BuildingID and RoomNo for Searching GuestID")
+                    node_id = input("BuildindID ")
+                    room_no = input("RoomNo :")
+                    print(self.handle_search_guest_by_room_id_and_building_id(node_id,room_no))
                 else:
-                    print("Invalid input")
-            except (TypeError, ValueError) as error:
-                print(f"Invalid input: {error}")
+                    print("Invalid Input Try Again")
+            except (ValueError, TypeError) as e:
+                print(f"Invalid input : {e}")
 
+    def initialize_system(self):
 
-def main() -> None:
-    try:
-        building_count = int(input("Initial building count N: "))
-        channel_count = int(input("Number of channels: "))
-        if building_count < 1 or channel_count < 1:
-            raise ValueError("Building and channel counts must be positive")
-        counts = {channel_id: int(input(f"Guest count for channel {channel_id}: "))
-                  for channel_id in range(1, channel_count + 1)}
-        system = HotelSystem(salt="0")
-        system.initialize_system(list(range(1, building_count + 1)), counts)
-    except (TypeError, ValueError) as error:
-        print(f"Cannot initialize system: {error}")
-        return
-    HotelCLI(system).run()
+        pass
 
+    def handle_add_guest(self , method : str) -> None:
+            
+            if method == "1":
+                c = self._read_int("c")
+                s_start = self._read_int("s_start")
+                n = self._read_int("n")
+                return self.handle_add_batch(c , s_start , n )
+            elif method == "2":
+                c = self._read_int("c")
+                s = self._read_int("s")
+                return self.handle_add_single(c , s)
+            else:
+                print("Invalid Method")
+                return "Invalid Method"
+    
+    def handle_add_batch(self , c , s_start , n):
+        try:
+            c = int(c)
+            s_start = int(s_start)
+            n = int(n)
+            if c < 1 or s_start < 1 or n < 0:
+                raise Exception("Input must be positive number")
+        except:
+            print("Error c,s_start,n should be int")
+            return "Error c,s_start,n should be int"
+        system = self.get_system
+        return system.add_guest_batch(c , s_start , n)
 
-if __name__ == "__main__":
-    main()
+    def handle_add_single(self , c , s):
+        try:
+            c = int(c)
+            s = int(s)
+            if c < 1 or s < 1:
+                raise Exception("Input must be positive number")
+        except:
+            print("Error c,s should be int")
+            return "Error c,s should be int"
+        
+        system = self.get_system
+        return system.add_guest_single(c , s)
+    
+    def handle_remove_guest(self , c , s):
+        try:
+            c = int(c)
+            s = int(s)
+
+            if c < 1 or s < 1:
+                raise Exception("Input must be positive number")
+        except:
+            print("Error c,s should be int")
+            return "Error c,s should be int"
+        
+        system = self.get_system
+        return system.remove_guest(c , s)
+    
+    def handle_add_building(self , node_id):
+        try:
+            node_id = int(node_id)
+        except:
+            print("Node it Need to be int")
+            return "Node it Need to be int"
+        system = self.get_system
+
+        building,history = system.add_building(node_id)
+        if building is None:
+            return
+        if history is not None:
+            for i in history:
+                print(i)
+
+        for i in building.values():
+            print(f"Building : {i.get_node_id} | Guest : {len(i.get_RoomAddr)}")
+    
+    def handle_remove_building(self , node_id):
+        try:
+            node_id = int(node_id)
+        except:
+            print("Need to be int")
+            return "Need to be int"
+        system = self.get_system
+        building,history = system.remove_building(node_id)
+        if building is None:
+            return
+        if history is not None:
+            for i in history:
+                print(i)
+
+        for i in building.values():
+            print(f"Building : {i.get_node_id} | Guest : {len(i.get_RoomAddr)}")
+    
+    def handle_search_guest_location(self , c ,s):
+        try:
+            c = int(c)
+            s = int(s)
+
+            if c < 1 or s < 1:
+                raise Exception("Input must be positive number")
+        except:
+            print("Error c,s should be int")
+            return "Error c,s should be int"
+        system = self.get_system
+        return system.search_guest_location((c,s))
+    
+    def handle_search_guest_by_room_id_and_building_id(self , node_id , room_no):
+        try:
+            node_id = int(node_id)
+            room_no = int(room_no)
+        except:
+            print("Need to be int")
+            return "Need to be int"
+
+        system = self.get_system
+
+        return system.search_guest_by_room_id_and_building_id(node_id , room_no)
+    
+    def show_occupied_rooms(self):
+        system = self.get_system
+
+        return system.show_occupied_room()
+    
+    def show_load_balance_report(self):
+        system = self.get_system
+
+        return system.show_load_balance_report()
+    
+    def run_benchmark(self):
+        system = self.get_system
+
+        return system.run_benchmark()
+    
+    def export_csv(self):
+        system = self.get_system
+        return system.export_guest_csv()
+
+Hotel = HotelCLI(HotelSystem())

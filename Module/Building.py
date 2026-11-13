@@ -32,17 +32,14 @@ class Building:
         guest.assign_room(new_room)
         #Add room into building
         bisect.insort(self.__RoomAddr , new_room , key=lambda x : x.room_no)
-        #self.__RoomAddr.append(new_room)
 
     def remove_room(self , room_id):
-        idx = bisect.bisect_left(self.__RoomAddr,room_id,key=lambda room: room.room_no,)
-        if idx is None:
+        idx = bisect.bisect_left(self.__RoomAddr, room_id, key=lambda room: room.room_no)
+        if idx >= len(self.__RoomAddr) or self.__RoomAddr[idx].room_no != room_id:
             return "This room not exist"
         del self.__RoomAddr[idx]
-        return "Deletion Succeed"    
+        return "Deletion Succeed"
 
-        
     def add_vnode(self,node):
         self.__Vnode.append(node)
         return len(self.__Vnode)
-    

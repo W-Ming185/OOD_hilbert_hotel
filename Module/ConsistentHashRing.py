@@ -18,7 +18,7 @@ class ConsistentHashRing:
         rank = building.get_Vnode_rank
         node_id = building.get_node_id
         node.assign_node_seq(rank)
-        text = f"{node_id}:{rank}"
+        text = f"node:{node_id}:{rank}"
         combined_text = f"{text}{salt}"
         hash_obj = hashlib.sha256(combined_text.encode('utf-8'))
 
@@ -26,7 +26,8 @@ class ConsistentHashRing:
         position_on_ring = int.from_bytes(bin_64bit, byteorder='big')
 
         node.assign_hash_key(position_on_ring)
-        bisect.insort(self.__list, node, key=lambda x: x.get_hash_key)
+        # tie-break on (position, node_id, j) as the brief requires
+        bisect.insort(self.__list, node, key=lambda x: (x.get_hash_key, x.get_building.get_node_id, x.get_node_seq))
         return node
 
     def remove_node(self, building):
@@ -37,6 +38,8 @@ class ConsistentHashRing:
         return all_vnode
 
     def get_vnode_for_guest(self,hash_value): #binary search treeได้
+        if not self.__list:
+            return None
         index = bisect.bisect_left(self.__list, hash_value, key=lambda x: x.get_hash_key)
         if index >= len(self.__list):
             index = 0
@@ -48,4 +51,4 @@ class ConsistentHashRing:
 
     def next_vnode(self,vnode):
         index = self.__list.index(vnode)
-        return self.__list[index+1 % len(self.__list)]    
+        return self.__list[(index+1) % len(self.__list)]

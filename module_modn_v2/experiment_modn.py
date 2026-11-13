@@ -1,312 +1,292 @@
-"""Reproducible Mod-N experiment set A/B from section 7 of the project brief."""
-
-from __future__ import annotations
-
-import argparse
-import csv
-import gc
-import html
-import statistics
-import time
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # project root
+from module_modn_v2.hotelsystem import HotelSystem
 import tracemalloc
-from collections import defaultdict
-from pathlib import Path
+import time
+import matplotlib.pyplot as plt
+import numpy as np
 
-from .hotelsystem import HotelSystem
+# ==========================================
+# ส่วนของฟังก์ชันวาดกราฟ (เฉพาะ Consistent Hashing แบบ Grid)
+# ==========================================
+def plot_graph_a_grid(K_values, metrics, n_param=10, v_param=32):
+    """
+    สร้างกราฟ A แบบ 2x3 Grid ตามภาพอ้างอิง image.png
+    """
+    fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+    fig.suptitle(f"A: Time vs K; N={n_param}, V={v_param}, 10 channels\nmod n: HotelSystem", fontsize=14)
 
+    # กำหนดหัวข้อและหน่วยของแต่ละแกน
+    titles = ["Build routing", "Assign guests", "Guest Search", "Room Search", "Calculate building"]
+    y_labels = ["ms", "ms", "μs per search", "μs per search", "μs per calculation"]
+    keys = ['build_routing', 'assign_guests', 'guest_search', 'room_search', 'calc_building']
 
-SALTS = ("0", "1", "2")
-SIZE_CASES = (1_000, 10_000, 100_000)
-BUILDING_CASES = (5, 10, 20)
-CHANNELS = 10
+    axes.flat[-1].axis('off')  # 5 graphs in a 2x3 grid -> hide the empty 6th slot
+    for i, ax in enumerate(list(axes.flat)[:len(keys)]):
+        key = keys[i]
+        if key in metrics and len(metrics[key]) == len(K_values):
+            # วาดเฉพาะเส้น Consistent Hashing (สีฟ้า)
+            ax.plot(K_values, metrics[key], marker='o', label='mod n', color='tab:orange')
+        else:
+            # ถ้าไม่มีข้อมูลให้ใส่ 0 ไว้เพื่อไม่ให้กราฟพัง
+            ax.plot(K_values, [0]*len(K_values), marker='o', label='mod n', color='tab:orange')
+            
+        ax.set_title(titles[i])
+        ax.set_xlabel('Guest count K')
+        ax.set_ylabel(y_labels[i])
+        ax.grid(True, linestyle='-', alpha=0.3)
+        ax.legend()
 
+    plt.tight_layout()
+    plt.savefig('modn_graph_A_time_vs_K.png', dpi=300)
+    print("-> Saved Graph A (modn_graph_A_time_vs_K.png)")
 
-def _initial_guest_count(k: int, channel_id: int) -> int:
-    base, remainder = divmod(k, CHANNELS)
-    return base + (1 if channel_id <= remainder else 0)
+def plot_graph_b_grid(N_values, add_rates, remove_rates, k_param=10000, v_param=32):
+    """
+    สร้างกราฟ B แบบ 1x2 Grid ตามภาพอ้างอิง imageb.png
+    """
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    fig.suptitle(f"B: Migration; K=[{k_param}], V={v_param}, 10 channels\nmod n: HotelSystem", fontsize=14)
 
+    # กราฟย่อยซ้าย: Add
+    ax1.plot(N_values, add_rates, marker='o', label='mod n', color='tab:orange')
+    ax1.set_title('add', fontsize=14)
+    ax1.set_xlabel('Original building count N')
+    ax1.set_ylabel('Migrated guests (%)')
+    ax1.grid(True, linestyle='-', alpha=0.3)
+    ax1.legend()
 
-def populate_modn(n: int, k: int, salt: str) -> HotelSystem:
-    hotel = HotelSystem(salt=salt)
-    for node_id in range(1, n + 1):
-        hotel.add_building(node_id)
-    for channel_id in range(1, CHANNELS + 1):
-        count = _initial_guest_count(k, channel_id)
-        if count:
-            hotel.add_guest_batch(channel_id, 1, count)
-    return hotel
+    # กราฟย่อยขวา: Remove
+    ax2.plot(N_values, remove_rates, marker='o', label='mod n', color='tab:orange')
+    ax2.set_title('remove', fontsize=14)
+    ax2.set_xlabel('Original building count N')
+    ax2.set_ylabel('Migrated guests (%)')
+    ax2.grid(True, linestyle='-', alpha=0.3)
+    ax2.legend()
 
+    plt.tight_layout()
+    plt.savefig('modn_graph_B_migration_vs_N.png', dpi=300)
+    print("-> Saved Graph B (modn_graph_B_migration_vs_N.png)")
 
-def measure_memory(n: int, k: int, salt: str) -> tuple[float, float]:
-    gc.collect()
-    tracemalloc.start()
-    hotel = populate_modn(n, k, salt)
-    current, peak = tracemalloc.get_traced_memory()
-    tracemalloc.stop()
-    # Keep the local reference alive through both measurements.
-    assert len(hotel.guest) == k
-    mib = 1024 * 1024
-    return current / mib, peak / mib
+def plot_graph_c_grid(V_values, cv_cons, current_cons, peak_cons,
+                      cv_mod=None, current_mod=None, peak_mod=None,
+                      n_param=10, k_param=10000):
+    """
+    สร้างกราฟ C แบบ 1x3 Grid ตามภาพอ้างอิง C
+    """
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    fig.suptitle(f"C: Effect of V; N={n_param}, K=[{k_param}], 10 channels\nsalts=0,1,2; median with min-max band\nmod n: HotelSystem; modulo: hash mod N baseline", fontsize=14)
 
+    # 1. Load imbalance (CV)
+    axes[0].plot(V_values, cv_cons, marker='o', label='mod n', color='tab:orange')
+    if cv_mod: axes[0].plot(V_values, cv_mod, marker='o', label='modulo', color='tab:orange')
+    axes[0].set_title('Load imbalance', fontsize=14)
+    axes[0].set_xlabel('Virtual nodes per building V')
+    axes[0].set_ylabel('CV (stddev / mean)')
+    axes[0].grid(True, linestyle='-', alpha=0.3)
+    axes[0].legend()
 
-def run_size_case(n: int, k: int, salt: str) -> dict:
-    hotel = HotelSystem(salt=salt)
-    start = time.perf_counter()
-    for node_id in range(1, n + 1):
-        hotel.add_building(node_id)
-    building_setup_seconds = time.perf_counter() - start
+    # 2. Current Python memory
+    axes[1].plot(V_values, current_cons, marker='o', label='mod n', color='tab:orange')
+    if current_mod: axes[1].plot(V_values, current_mod, marker='o', label='modulo', color='tab:orange')
+    axes[1].set_title('Current Python memory', fontsize=14)
+    axes[1].set_xlabel('Virtual nodes per building V')
+    axes[1].set_ylabel('MiB')
+    axes[1].grid(True, linestyle='-', alpha=0.3)
+    axes[1].legend()
 
-    start = time.perf_counter()
-    for channel_id in range(1, CHANNELS + 1):
-        count = _initial_guest_count(k, channel_id)
-        if count:
-            hotel.add_guest_batch(channel_id, 1, count)
-    assign_seconds = time.perf_counter() - start
+    # 3. Peak Python memory
+    axes[2].plot(V_values, peak_cons, marker='o', label='mod n', color='tab:orange')
+    if peak_mod: axes[2].plot(V_values, peak_mod, marker='o', label='modulo', color='tab:orange')
+    axes[2].set_title('Peak Python memory', fontsize=14)
+    axes[2].set_xlabel('Virtual nodes per building V')
+    axes[2].set_ylabel('MiB')
+    axes[2].grid(True, linestyle='-', alpha=0.3)
+    axes[2].legend()
 
-    query_ids = [guest.guest_id for guest in hotel.guest]
-    start = time.perf_counter()
-    for index in range(1_000):
-        if hotel.search_guest_location(*query_ids[index % len(query_ids)]) == "guest_id not found":
-            raise AssertionError("A generated guest could not be found")
-    search_avg_seconds = (time.perf_counter() - start) / 1_000
+    plt.tight_layout()
+    plt.savefig('modn_graph_C_effect_of_V.png', dpi=300)
+    print("-> Saved Graph C (modn_graph_C_effect_of_V.png)")
 
-    room_rows = [(room.node_id, room.room_no, room.guest.guest_id)
-                 for room in hotel.show_occupied_room()]
-    start = time.perf_counter()
-    rooms = sorted(room_rows, key=lambda row: (row[0], row[1]))
-    sorted_room_listing_seconds = time.perf_counter() - start
-    if len(rooms) != k:
-        raise AssertionError("Room listing did not return every guest")
+# ==========================================
+# ส่วนของการทดลอง
+# ==========================================
+def build_guest_id(n, c):
+    each_c = n // c
+    left_over = n % c
+    res = []
+    for i in range(1 , c+1):
+        for j in range(each_c):
+            res.append((i , j + 1))
+        if left_over > 0:
+            res.append((i , each_c + 1))
+            left_over-=1
+    return res
 
-    balance = hotel.show_load_balance_report()
-    current_mib, peak_mib = measure_memory(n, k, salt)
-    return {
-        "experiment": "A",
-        "N": n,
-        "K": k,
-        "salt": salt,
-        "channels": CHANNELS,
-        "building_setup_seconds": building_setup_seconds,
-        "guest_assignment_seconds": assign_seconds,
-        "search_1000_avg_seconds": search_avg_seconds,
-        "sorted_room_listing_seconds": sorted_room_listing_seconds,
-        "load_min": balance["min"],
-        "load_max": balance["max"],
-        "load_mean": float(balance["mean"]),
-        "load_sd": float(balance["sd"]),
-        "load_cv": float(balance["cv"]) if balance["cv"] is not None else None,
-        "memory_current_mib": current_mib,
-        "memory_peak_mib": peak_mib,
+def experiment_1():
+    print("\nExperiment 1 : ")
+    K = [1000 , 10000 , 100000]
+    N = 10
+    V = 32
+    
+    metrics = {
+        'build_routing': [], 'assign_guests': [], 
+        'guest_search': [], 'room_search': [], 'calc_building': []
     }
+    
+    salt = input("Enter Salt (Exp 1): ")
+    
+    for k in K:        
+        exp_start = time.perf_counter()
+        tracemalloc.start()
+        system = HotelSystem()
+        if hasattr(system, 'set_salt'):
+            system.set_salt(salt)
+        guest_id_list = build_guest_id(k , 10)
+        system.set_vnode_size(V)
+        
+        # 1. Build routing (ms)
+        start = time.perf_counter()
+        for i in range(0, N):
+            system.add_building(i+1)
+        metrics['build_routing'].append((time.perf_counter() - start) * 1000)
 
+        # 2. Assign guests (ms) - จัดแขกเข้าตึก
+        start = time.perf_counter()
+        for guest in guest_id_list:
+            system.add_guest_single(guest[0], guest[1])
+        metrics['assign_guests'].append((time.perf_counter() - start) * 1000)
+        
+        # 4. Guest Search (μs)
+        search_count = min(1000, len(guest_id_list))
+        start = time.perf_counter()
+        for i in range(search_count):
+            system.search_guest_location(guest_id_list[i])
+        metrics['guest_search'].append(((time.perf_counter() - start) / search_count) * 1_000_000)
+        
+        # 5. Room Search (μs) - จับเวลาค้นหาแขกจาก Building ID และ Room No
+        # ดึงห้องแรกของตึกแรกมาลองค้นหา
+        test_building_id = 1
+        test_room_no = 1 
+        start = time.perf_counter()
+        for i in range(search_count):
+            system.search_guest_by_room_id_and_building_id(test_building_id, test_room_no)
+        metrics['room_search'].append(((time.perf_counter() - start) / search_count) * 1_000_000)
+        
+        # 6. Calculate building (μs) - จับเวลาหา Vnode เป้าหมายจาก Hash (การทำงานของวงแหวน)
+        test_hash = 123456789
+        start = time.perf_counter()
+        for i in range(search_count):
+            system.hashmod.get_building_for_guest(test_hash)
+        metrics['calc_building'].append(((time.perf_counter() - start) / search_count) * 1_000_000)
 
-def run_building_case(n: int, k: int, salt: str, action: str) -> dict:
-    hotel = populate_modn(n, k, salt)
-    start = time.perf_counter()
-    if action == "add":
-        hotel.add_building(n + 1)
-    else:
-        hotel.remove_building(1)
-    elapsed = time.perf_counter() - start
-    return {
-        "experiment": "B",
-        "N": n,
-        "K": k,
-        "salt": salt,
-        "channels": CHANNELS,
-        "action": action,
-        "operation_seconds": elapsed,
-        "moved_guests": hotel.last_migration_count,
-        "migration_rate": float(hotel.last_migration_rate or 0),
-    }
+        current, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        
+        elapsed = time.perf_counter() - exp_start
+        print(f"Done Exp 1: K={k} | Memory={peak/(1024*1024):.4f} MiB | Time={elapsed:.2f} s")
 
+    plot_graph_a_grid(K, metrics, n_param=N, v_param=V)
 
-def _write_csv(path: Path, rows: list[dict]) -> None:
-    if not rows:
-        return
-    fields = list(dict.fromkeys(key for row in rows for key in row))
-    with path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(rows)
+def experiment_2():
+    print("\nExperiment 2 : ")
+    N = [5, 10, 20]
+    K = 10000
+    V = 32
+    
+    # แยกเก็บ Add และ Remove (เป็นเปอร์เซ็นต์ %)
+    add_rates_pct = []
+    remove_rates_pct = []
+    
+    salt = input("Enter Salt (Exp 2): ")
+    for n in N:
+        system = HotelSystem()
+        if hasattr(system, 'set_salt'):
+            system.set_salt(salt)
+        system.set_vnode_size(V)
+        guest_list = build_guest_id(K , 10)
 
+        for i in range(0,n):
+            system.add_building(i+1)
+        for guest in guest_list:
+            system.add_guest_single(guest[0],guest[1])
+            
+        new_building_id = n+1
 
-def _summarize(rows: list[dict]) -> list[dict]:
-    groups = defaultdict(list)
-    keys = ("experiment", "N", "K", "action")
-    for row in rows:
-        groups[tuple(row.get(key) for key in keys)].append(row)
-    summary = []
-    for group, group_rows in groups.items():
-        item = {key: value for key, value in zip(keys, group) if value is not None}
-        item["rounds"] = len(group_rows)
-        item["salts"] = ",".join(row["salt"] for row in group_rows)
-        metrics = ("building_setup_seconds", "guest_assignment_seconds", "search_1000_avg_seconds",
-                   "sorted_room_listing_seconds", "memory_current_mib", "memory_peak_mib",
-                   "load_min", "load_max", "load_mean", "load_sd", "load_cv",
-                   "operation_seconds", "moved_guests", "migration_rate")
-        for metric in metrics:
-            values = [row[metric] for row in group_rows if metric in row]
-            if values:
-                item[f"median_{metric}"] = statistics.median(values)
-                item[f"min_{metric}"] = min(values)
-                item[f"max_{metric}"] = max(values)
-        summary.append(item)
-    return summary
+        # จำลอง Add Building
+        building, add_history = system.add_building(new_building_id)
+        num_added = len(add_history) if add_history else 0
+        add_rates_pct.append((num_added / K) * 100) # แปลงเป็น %
 
+        # จำลอง Remove Building
+        building, remove_history = system.remove_building(new_building_id)
+        num_removed = len(remove_history) if remove_history else 0
+        remove_rates_pct.append((num_removed / K) * 100) # แปลงเป็น %
 
-def _svg_chart(path: Path, title: str, caption: str, categories: list[str],
-               y_label: str, series: list[tuple[str, list[float], list[float], list[float], str]]) -> None:
-    """Write a dependency-free SVG line chart with median points and min/max bars."""
-    width, height = 900, 520
-    left, right, top, bottom = 92, 36, 92, 115
-    plot_w, plot_h = width - left - right, height - top - bottom
-    values = []
-    parsed = series
-    for _, median, minimum, maximum, _ in parsed:
-        values.extend(minimum)
-        values.extend(maximum)
-    maximum_y = max(values, default=1.0) * 1.12
-    if maximum_y <= 0:
-        maximum_y = 1.0
+        print(f"N={n} -> {n+1} | Addย้าย: {num_added}คน ({add_rates_pct[-1]:.2f}%) | Removeย้าย: {num_removed}คน ({remove_rates_pct[-1]:.2f}%)")
 
-    def y(value: float) -> float:
-        return top + plot_h - value / maximum_y * plot_h
+    # เรียกวาดกราฟ B แบบ 2 ช่อง ซ้าย-ขวา
+    plot_graph_b_grid(N, add_rates_pct, remove_rates_pct, k_param=K, v_param=V)
 
-    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
-             '<rect width="100%" height="100%" fill="white"/>',
-             f'<text x="{width/2}" y="34" text-anchor="middle" font-family="Arial" font-size="22" font-weight="bold">{html.escape(title)}</text>',
-             f'<text x="{width/2}" y="59" text-anchor="middle" font-family="Arial" font-size="13">{html.escape(caption)}</text>']
-    for tick in range(6):
-        value = maximum_y * tick / 5
-        yy = y(value)
-        parts.append(f'<line x1="{left}" y1="{yy:.1f}" x2="{width-right}" y2="{yy:.1f}" stroke="#d8dee8"/>')
-        parts.append(f'<text x="{left-12}" y="{yy+4:.1f}" text-anchor="end" font-family="Arial" font-size="12">{value:.3g}</text>')
-    parts.append(f'<line x1="{left}" y1="{top}" x2="{left}" y2="{top+plot_h}" stroke="#333"/>')
-    parts.append(f'<line x1="{left}" y1="{top+plot_h}" x2="{width-right}" y2="{top+plot_h}" stroke="#333"/>')
-    for index, category in enumerate(categories):
-        xx = left + plot_w * (index + 0.5) / max(1, len(categories))
-        parts.append(f'<text x="{xx:.1f}" y="{top+plot_h+25}" text-anchor="middle" font-family="Arial" font-size="12">{html.escape(category)}</text>')
-    parts.append(f'<text x="24" y="{top+plot_h/2}" transform="rotate(-90 24 {top+plot_h/2})" text-anchor="middle" font-family="Arial" font-size="14">{html.escape(y_label)}</text>')
-    for series_index, (label, median, minimum, maximum, color) in enumerate(parsed):
-        coords = []
-        for index in range(len(categories)):
-            xx = left + plot_w * (index + 0.5) / max(1, len(categories))
-            yy = y(median[index])
-            coords.append(f"{xx:.1f},{yy:.1f}")
-            parts.append(f'<line x1="{xx:.1f}" y1="{y(minimum[index]):.1f}" x2="{xx:.1f}" y2="{y(maximum[index]):.1f}" stroke="{color}" stroke-width="2"/>')
-            parts.append(f'<circle cx="{xx:.1f}" cy="{yy:.1f}" r="5" fill="{color}"/>')
-        parts.append(f'<polyline points="{" ".join(coords)}" fill="none" stroke="{color}" stroke-width="2.5"/>')
-        lx = left + series_index * 220
-        parts.append(f'<line x1="{lx}" y1="{height-40}" x2="{lx+24}" y2="{height-40}" stroke="{color}" stroke-width="3"/>')
-        parts.append(f'<text x="{lx+32}" y="{height-36}" font-family="Arial" font-size="12">{html.escape(label)} (median; min-max)</text>')
-    parts.extend(['</svg>'])
-    path.write_text("\n".join(parts), encoding="utf-8")
+def experiment_3():
+    print("\nExperiment 3 : ")
+    V = [1, 8, 32]
+    N = 10
+    K = 10000
+    
+    cv_list = []
+    # เปลี่ยนจาก memory_list เป็น 2 ตัวนี้ครับ
+    current_list = []
+    peak_list = []
 
+    salt = input("Enter Salt (Exp 3): ")
 
-def _write_charts(summary: list[dict], output_dir: Path) -> list[Path]:
-    size_rows = sorted((row for row in summary if row.get("experiment") == "A"), key=lambda row: row["K"])
-    building_rows = sorted((row for row in summary if row.get("experiment") == "B"), key=lambda row: (row["action"], row["N"]))
-    charts = []
-    for filename, title, metric_specs, units, y_label in (
-        ("modn_time_by_size.svg", "Mod-N operation time by guest count",
-         [("Guest assignment", "guest_assignment_seconds", "#2563eb"),
-          ("Sorted room listing", "sorted_room_listing_seconds", "#dc2626")], "seconds", "Time (seconds)"),
-        ("modn_memory_by_size.svg", "Mod-N Python-tracked memory by guest count",
-         [("Current memory", "memory_current_mib", "#059669"),
-          ("Peak memory", "memory_peak_mib", "#7c3aed")], "MiB", "Memory (MiB)"),
-    ):
-        series = []
-        for label, metric, color in metric_specs:
-            med = [row[f"median_{metric}"] for row in size_rows]
-            low = [row[f"min_{metric}"] for row in size_rows]
-            high = [row[f"max_{metric}"] for row in size_rows]
-            series.append((label, med, low, high, color))
-        output = output_dir / filename
-        _svg_chart(output, title, f"N=10, 10 channels, salts 0/1/2, median and min-max range; unit: {units}",
-                   [str(row["K"]) for row in size_rows], y_label, series)
-        charts.append(output)
+    for v in V:
+        tracemalloc.start()
+        system = HotelSystem()
+        if hasattr(system, 'set_salt'):
+            system.set_salt(salt)
+        system.set_vnode_size(v)
 
-    rate_series = []
-    for action, label, color in (("add", "Add one building", "#2563eb"),
-                                 ("remove", "Remove one building", "#dc2626")):
-        rows = [row for row in building_rows if row["action"] == action]
-        rate_series.append((label,
-                            [row["median_migration_rate"] * 100 for row in rows],
-                            [row["min_migration_rate"] * 100 for row in rows],
-                            [row["max_migration_rate"] * 100 for row in rows], color))
-    output = output_dir / "modn_migration_rate_by_buildings.svg"
-    _svg_chart(output, "Mod-N guest migration rate by building count",
-               "K=10,000, 10 channels, salts 0/1/2, median and min-max range; unit: percent",
-               [str(n) for n in BUILDING_CASES], "Guests moved (percent of K)", rate_series)
-    charts.append(output)
-    return charts
+        for i in range(N):
+            system.add_building(i+1)
+            
 
+        guest_list = build_guest_id(K, 10)
+        for guest in guest_list:
+            system.add_guest_single(guest[0], guest[1])
 
-def run_experiments(output_dir: Path) -> tuple[Path, Path]:
-    output_dir.mkdir(parents=True, exist_ok=True)
-    raw_rows = []
-    for k in SIZE_CASES:
-        for salt in SALTS:
-            raw_rows.append(run_size_case(10, k, salt))
-    for n in BUILDING_CASES:
-        for salt in SALTS:
-            for action in ("add", "remove"):
-                raw_rows.append(run_building_case(n, 10_000, salt, action))
+        res = system.show_load_balance_report()
+        
+        current, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        
+        # เก็บค่าแยกกันทั้ง 2 ตัว
+        current_list.append(current / (1024 * 1024))
+        peak_list.append(peak / (1024 * 1024))
+        new_build,add_history = system.add_building(999)
+        print(f"Add Building Migration (K) : {len(add_history) if add_history else 0}")
 
-    raw_path = output_dir / "modn_experiment_raw.csv"
-    summary_path = output_dir / "modn_experiment_summary.csv"
-    _write_csv(raw_path, raw_rows)
-    summary_rows = _summarize(raw_rows)
-    _write_csv(summary_path, summary_rows)
-    c_rows = []
-    for salt in SALTS:
-        size_row = next(row for row in raw_rows
-                        if row["experiment"] == "A" and row["K"] == 10_000 and row["salt"] == salt)
-        add_row = next(row for row in raw_rows
-                       if row["experiment"] == "B" and row["N"] == 10
-                       and row["action"] == "add" and row["salt"] == salt)
-        remove_row = next(row for row in raw_rows
-                          if row["experiment"] == "B" and row["N"] == 10
-                          and row["action"] == "remove" and row["salt"] == salt)
-        c_rows.append({
-            "experiment": "C Mod-N baseline",
-            "N": 10,
-            "K": 10_000,
-            "V": "not applicable to Mod-N",
-            "salt": salt,
-            "load_min": size_row["load_min"],
-            "load_max": size_row["load_max"],
-            "load_mean": size_row["load_mean"],
-            "load_sd": size_row["load_sd"],
-            "load_cv": size_row["load_cv"],
-            "memory_current_mib": size_row["memory_current_mib"],
-            "memory_peak_mib": size_row["memory_peak_mib"],
-            "add_moved_guests": add_row["moved_guests"],
-            "add_migration_rate": add_row["migration_rate"],
-            "remove_moved_guests": remove_row["moved_guests"],
-            "remove_migration_rate": remove_row["migration_rate"],
-        })
-    _write_csv(output_dir / "modn_experiment_C_baseline.csv", c_rows)
-    c_summary = _summarize(c_rows)
-    for row in c_summary:
-        row["V"] = "not applicable to Mod-N"
-    _write_csv(output_dir / "modn_experiment_C_summary.csv", c_summary)
-    _write_charts(summary_rows, output_dir)
-    return raw_path, summary_path
+        remove_build,remove_history = system.remove_building(999)
+        print(f"Remove Building Migration (K) : {len(remove_history) if remove_history else 0}")
+        guest_counts = [float(item[1]) for item in res] if res else []
+        if guest_counts:
+            mean_val = sum(guest_counts) / len(guest_counts)
+            sum_squared = sum((x - mean_val) ** 2 for x in guest_counts)
+            sd_val = (sum_squared / len(guest_counts)) ** 0.5
+            cv_val = sd_val / mean_val if mean_val > 0 else 0
+        else:
+            cv_val = 0
+            
+        cv_list.append(cv_val)
+        print(f"V={v} | CV={cv_val:.4f} | Current Memory={current_list[-1]:.4f} MiB | Peak Memory={peak_list[-1]:.4f} MiB")
 
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the Mod-N section 7 experiment matrix")
-    parser.add_argument("--output-dir", type=Path, default=Path("module_modn_v2") / "experiment_results")
-    args = parser.parse_args()
-    raw, summary = run_experiments(args.output_dir)
-    print(f"Raw results: {raw}")
-    print(f"Three-round median summary: {summary}")
-    print(f"Mod-N C baseline: {args.output_dir / 'modn_experiment_C_baseline.csv'}")
-    print(f"Mod-N C three-round summary: {args.output_dir / 'modn_experiment_C_summary.csv'}")
-    print("V sweep is not applicable: Mod-N has no virtual-node parameter.")
-
+    # เรียกฟังก์ชันแบบ 3 ช่อง
+    plot_graph_c_grid(V, cv_list, current_list, peak_list, n_param=N, k_param=K)
 
 if __name__ == "__main__":
-    main()
+    experiment_1()
+    experiment_2()
+    experiment_3()
+    print("\nFinish! ตรวจสอบไฟล์รูปกราฟ (modn_graph_A_time_vs_K.png และ modn_graph_B_migration_vs_N.png) ได้เลยครับ")
