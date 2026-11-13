@@ -204,7 +204,8 @@ def experiment_1():
         # 3. Sort rooms (ms) 
         # ระบบของคุณใช้ bisect.insort ตอน Add room ไปแล้ว ทำให้รายชื่อห้องถูก Sort ไว้ตลอดเวลา 
         # ดังนั้นเวลาที่ใช้ Sort จึงเป็น 0 (เพราะไม่ต้องทำอะไรเพิ่ม)
-        metrics['sort_rooms'].append(0) 
+        start = time.perf_counter()
+        
 
         # 4. Guest Search (μs)
         search_count = min(1000, len(guest_id_list))
@@ -295,9 +296,10 @@ def experiment_3():
         if hasattr(system, 'set_salt'):
             system.set_salt(salt)
         system.set_vnode_size(v)
-        
+
         for i in range(N):
             system.add_building(i+1)
+            
 
         guest_list = build_guest_id(K, 10)
         for guest in guest_list:
@@ -311,7 +313,11 @@ def experiment_3():
         # เก็บค่าแยกกันทั้ง 2 ตัว
         current_list.append(current / (1024 * 1024))
         peak_list.append(peak / (1024 * 1024))
-        
+        new_build,add_history = system.add_building(999)
+        print(f"Add Building Migration Time : {len(add_history)}")
+
+        remove_build,remove_history = system.remove_building(999)
+        print(f"Remove Building Migration Time : {len(remove_history)}")
         guest_counts = [float(item[1]) for item in res] if res else []
         if guest_counts:
             mean_val = sum(guest_counts) / len(guest_counts)
@@ -328,7 +334,7 @@ def experiment_3():
     plot_graph_c_grid(V, cv_list, current_list, peak_list, n_param=N, k_param=K)
 
 if __name__ == "__main__":
-    experiment_1()
-    experiment_2()
+    # experiment_1()
+    # experiment_2()
     experiment_3()
     print("\nFinish! ตรวจสอบไฟล์รูปกราฟ (graph_A_time_vs_K.png และ graph_B_migration_vs_N.png) ได้เลยครับ")
