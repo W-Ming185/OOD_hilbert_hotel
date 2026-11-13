@@ -10,7 +10,7 @@ def build_guest_id(n, c):
     for i in range(1 , c+1):
         for j in range(each_c):
                     #   c   s
-            res.append((i , j))
+            res.append((i , j)) 
         if left_over > 0:
             res.append((i , each_c))
             left_over-=1
@@ -142,4 +142,10 @@ def experiment_3():
         tracemalloc.stop()
         end_time = time.perf_counter()
         total_time = end_time - start_time     
-    return 
+    return
+
+
+experiment_1()
+experiment_2()
+experiment_3()
+print("this is will be ready tomorrow")

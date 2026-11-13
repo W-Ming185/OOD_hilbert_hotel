@@ -50,8 +50,8 @@ class HotelSystem():
         ls = self.guest_data_list
         print("-----------------")
         print("ID,ROOM_NO,HASH")
-        for i in ls:
-            print(i)
+        #for i in ls:
+            #print(i)
         print("-----------------")
 
     def initialize_system():
@@ -97,8 +97,8 @@ class HotelSystem():
         new_guest = Guest(c,s,position)
         bisect.insort(self.__guest , new_guest , key= lambda x : x.get_hash_value)
         building.add_room(new_guest)
-        print("Add Guest Succeed")
-        self.print_guest()
+        #print("Add Guest Succeed")
+        #self.print_guest()
         return "Add Guest Succeed"
 
     def add_guest_batch(self , c , s_start , n):
