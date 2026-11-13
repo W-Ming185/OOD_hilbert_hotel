@@ -12,14 +12,14 @@ class ConsistentHashRing:
     def get_vnode_size(self):
         return self.__vnode_size
     
-    def add_node(self,building):
+    def add_node(self,building,salt):
         node = VNode(building)
         building.add_vnode(node)
         rank = building.get_Vnode_rank
         node_id = building.get_node_id
         node.assign_node_seq(rank)
         text = f"{node_id}:{rank}"
-        salt = "ball"
+        salt = salt
         combined_text = f"{text}{salt}"
         hash_obj = hashlib.sha256(combined_text.encode('utf-8'))
 

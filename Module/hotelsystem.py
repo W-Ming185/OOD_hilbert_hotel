@@ -16,9 +16,16 @@ class HotelSystem():
         self.__guest = []
         # self.__report = Report()
         self.__ring = None#กำหนดเอง
-        self.__csvexport = CSVExporter() 
+        self.__csvexport = CSVExporter()
+        self.__salt = None 
         # self.__benchmark = BenchmarkResult()
+    
+    def set_salt(self,salt):
+        self.__salt = salt
 
+    @property
+    def salt(self):
+        return self.__salt
     @property
     def ring(self):
         return self.__ring
@@ -149,7 +156,7 @@ class HotelSystem():
             self.__buildings[node_id] = building
             vnode_size = self.__ring.get_vnode_size
             for _ in range(vnode_size):
-                self.__ring.add_node(building)
+                self.__ring.add_node(building,self.salt)
             
             affected_guest = []
             for vnode in building.get_Vnode:
@@ -192,6 +199,7 @@ class HotelSystem():
             return self.__buildings,history
         else:
             print(f"{node_id} is not exist.")
+            return None,None
 
 
     def search_guest_location(self,guest_id:tuple):
