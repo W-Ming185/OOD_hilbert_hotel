@@ -195,7 +195,7 @@ class HotelCLI:
             print("Error c,s should be int")
             return "Error c,s should be int"
         system = self.get_system
-        return system.search_guest_location(c,s)
+        return system.search_guest_location((c,s))
     
     def handle_search_guest_by_room_id_and_building_id(self , node_id , room_no):
         try:

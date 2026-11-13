@@ -130,7 +130,7 @@ class HotelSystem():
             return "This id does not exist for removal"
             
         # ดึง Object ออกมาได้เลยแบบ O(1) ไม่ต้องวน For loop หาแล้ว
-        rm_guest = self.__guests_dict[(c, s)] 
+        rm_guest = self.__guest_ids_dic[(c, s)]
         
         id = (c,s)
         rm_guest = None
@@ -144,14 +144,13 @@ class HotelSystem():
         building = self.__buildings[bulding_id]
         building.remove_room(room.room_no)
         self.__guest.remove(rm_guest)
-        del self.__guests_dict[(c, s)]
+        del self.__guest_ids_dic[(c, s)]
 
         #reference clearing (จะมีไม่มีก็ได้)
         room.assign_guest(None)
         rm_guest.assign_room(None)
         self.print_guest()
         print("Removal Succeed")
-        self.__guest_ids_set.remove((c, s))
         return "Removal Succeed"
 
     def add_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
