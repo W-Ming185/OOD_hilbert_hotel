@@ -18,6 +18,8 @@ class HotelCLI:
             raise Exception("Error")
             
     def run(self):
+        salt = input("Enter Salt : ")
+        self.__system.set_salt(salt)
         # show menu and call method
         while True:
             size = input("Enter Vnode size : ")

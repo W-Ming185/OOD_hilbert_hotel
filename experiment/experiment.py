@@ -27,12 +27,13 @@ def experiment_1():
     #consistent_hash
     for k in K:        
         system = HotelSystem()
+        salt = input("Enter Salt :")
+        system.set_salt(salt)
         guest_id_list = build_guest_id(k , 10)
         system.set_vnode_size(V)
         for i in range(0,N+1):
             system.add_building(i+1)
 
-        
         tracemalloc.start()
         start_time = time.perf_counter()
         for guest in guest_id_list:
@@ -59,7 +60,7 @@ def experiment_1():
         tracemalloc.stop()
         
         total_time = end_time - start_time
-    
+        print(f"Used Time : {total_time}")
     #hash_mod_n
     for k in K:
         tracemalloc.start()
@@ -81,7 +82,8 @@ def experiment_2():
     #consistent_hash
     for n in N:
         system = HotelSystem()
-        system.set_vnode_size(V)
+        salt = input("Enter Salt :")
+        system.set_salt(salt)
         guest_list = build_guest_id(K , 10)
 
         for i in range(0,n):
@@ -97,6 +99,8 @@ def experiment_2():
         total_time = end_time - start_time
 
         print(f"Total time for add building and migration = {total_time}")
+        for i in add_history:
+            print(i)
         start_time = time.perf_counter()
         building,remove_history = system.remove_building(new_building_id)
         end_time = time.perf_counter()
@@ -131,7 +135,9 @@ def experiment_3():
     #consistent_hash
     for v in V:
         system = HotelSystem()
-        system.set_vnode_size(v)
+        salt = input("Enter Salt :")
+        system.set_salt(salt)
+        system.set_vnode_size = v
         for i in range(N):
             system.add_building(i+1)
         guest_list = build_guest_id(K,10)
