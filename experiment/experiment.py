@@ -25,9 +25,10 @@ def experiment_1():
     V = 32
     res = []    
     #consistent_hash
+    salt = input("Enter Salt :")
+    
     for k in K:        
         system = HotelSystem()
-        salt = input("Enter Salt :")
         system.set_salt(salt)
         guest_id_list = build_guest_id(k , 10)
         system.set_vnode_size(V)
@@ -47,7 +48,7 @@ def experiment_1():
             location = system.search_guest_location(guest_id)
             end = time.perf_counter()
             search_time = round(end,8) -  round(start,8)
-            print(f"Search Found {location} : {search_time}")
+            #print(f"Search Found {location} : {search_time}")
         '''
             ทำการทดลอง
             - จัดแขก
@@ -59,8 +60,8 @@ def experiment_1():
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         
-        total_time = end_time - start_time
-        print(f"Used Time : {total_time}")
+        #total_time = end_time - start_time
+        #print(f"Used Time : {total_time}")
     #hash_mod_n
     for k in K:
         tracemalloc.start()
@@ -80,10 +81,11 @@ def experiment_2():
     K = 10000
     V = 32
     #consistent_hash
+    salt = input("Enter Salt :")
     for n in N:
         system = HotelSystem()
-        salt = input("Enter Salt :")
         system.set_salt(salt)
+        system.set_vnode_size(V)
         guest_list = build_guest_id(K , 10)
 
         for i in range(0,n):
@@ -133,11 +135,13 @@ def experiment_3():
     N = 10
     K = 10000
     #consistent_hash
+
+    salt = input("Enter Salt :")
+
     for v in V:
         system = HotelSystem()
-        salt = input("Enter Salt :")
         system.set_salt(salt)
-        system.set_vnode_size = v
+        system.set_vnode_size(v)
         for i in range(N):
             system.add_building(i+1)
         guest_list = build_guest_id(K,10)
@@ -165,4 +169,4 @@ def experiment_3():
 experiment_1()
 experiment_2()
 experiment_3()
-print("this is will be ready tomorrow")
+print("finish")
