@@ -12,8 +12,9 @@ from Module.CSVExporter import CSVExporter
 
 class HotelSystem():
     def __init__(self):
-        self.__buildings = {}
-        self.__guest = []
+        self.__buildings = {} 
+        self.__guest = [] #list of sorted hash
+        self.__guest_ids_dic = {} #dictionary contain ID of each guest
         # self.__report = Report()
         self.__ring = None#กำหนดเอง
         self.__csvexport = CSVExporter() 
@@ -58,11 +59,12 @@ class HotelSystem():
         pass
 
     def guest_dup_check(self , c , s):
-        inp = (c,s)
-        for guest in self.__guest:
-            if guest.guest_id == inp:
-                return True
-        return False
+        # inp = (c,s)
+        # for guest in self.__guest:
+        #     if guest.guest_id == inp:
+        #         return True
+        # return False
+        return (c, s) in self.__guest_ids_dic
     
     def ring_check(self):
         ring = self.__ring
@@ -99,6 +101,7 @@ class HotelSystem():
         building.add_room(new_guest)
         #print("Add Guest Succeed")
         #self.print_guest()
+        self.__guest_ids_dic[(c, s)] = new_guest
         return "Add Guest Succeed"
 
     def add_guest_batch(self , c , s_start , n):
@@ -116,10 +119,12 @@ class HotelSystem():
         return "Add Batch Succeed"
 
     def remove_guest(self , c ,s):
-        
         if not self.guest_dup_check(c,s):
-            print("This id does not exist for removal")
-            return
+            return "This id does not exist for removal"
+            
+        # ดึง Object ออกมาได้เลยแบบ O(1) ไม่ต้องวน For loop หาแล้ว
+        rm_guest = self.__guests_dict[(c, s)] 
+        
         id = (c,s)
         rm_guest = None
         for guest in self.__guest:
@@ -132,12 +137,14 @@ class HotelSystem():
         building = self.__buildings[bulding_id]
         building.remove_room(room.room_no)
         self.__guest.remove(rm_guest)
+        del self.__guests_dict[(c, s)]
 
         #reference clearing (จะมีไม่มีก็ได้)
         room.assign_guest(None)
         rm_guest.assign_room(None)
         self.print_guest()
         print("Removal Succeed")
+        self.__guest_ids_set.remove((c, s))
         return "Removal Succeed"
 
     def add_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
@@ -195,11 +202,11 @@ class HotelSystem():
 
 
     def search_guest_location(self,guest_id:tuple):
-        for i in self.__guest:
-            if i.guest_id == guest_id:
-                room = i.get_room
-                return (room.node_id, room.room_no)
-            return "guest_id not found"
+        if guest_id in self.__guest_ids_dic:
+            i = self.__guest_ids_dic[guest_id]
+            room = i.get_room
+            return (room.node_id, room.room_no)
+        return "guest_id not found"
         
     def migration(self,guest_list):
         history = []

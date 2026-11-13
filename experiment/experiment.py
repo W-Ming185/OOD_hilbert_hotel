@@ -20,7 +20,7 @@ def build_guest_id(n, c):
 
 def experiment_1():
     print("Experiment 1 : ")
-    K = [1000 , 10000 , 100000]
+    K = [1000 , 10000 , 200000,400000]
     N = 10
     V = 32
     res = []    
@@ -37,17 +37,27 @@ def experiment_1():
         start_time = time.perf_counter()
         for guest in guest_id_list:
             system.add_guest_single(guest[0],guest[1])
+        end_time = time.perf_counter()
+        print(f"Done : {k} , {end_time-start_time}")
+        for i in range(0,1000):
+            index = i
+            guest_id = guest_id_list[index]
+            start = time.perf_counter()
+            location = system.search_guest_location(guest_id)
+            end = time.perf_counter()
+            search_time = round(end,8) -  round(start,8)
+            print(f"Search Found {location} : {search_time}")
         '''
             ทำการทดลอง
             - จัดแขก
             - ค้นหา
             - เรียงลำดับ
             - หน่วยความจำ
-
+        end_time = time.perf_counter()
         '''
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
-        end_time = time.perf_counter()
+        
         total_time = end_time - start_time
     
     #hash_mod_n
@@ -71,6 +81,7 @@ def experiment_2():
     #consistent_hash
     for n in N:
         system = HotelSystem()
+        system.set_vnode_size(V)
         guest_list = build_guest_id(K , 10)
 
         for i in range(0,n):
@@ -95,10 +106,10 @@ def experiment_2():
         """
             ทำการทดลอง
         """
-        for i in add_history:
-            print(i)
-        for i in remove_history:
-            print(i)
+        # for i in add_history:
+        #     print(i)
+        # for i in remove_history:
+        #     print(i)
     #hash_mod_n
     for n in N:
         tracemalloc.start()
@@ -120,10 +131,10 @@ def experiment_3():
     #consistent_hash
     for v in V:
         system = HotelSystem()
-        system.set_vnode_size = v
+        system.set_vnode_size(v)
         for i in range(N):
             system.add_building(i+1)
-        guest_list = build_guest_id(K)
+        guest_list = build_guest_id(K,10)
 
         for guest in guest_list:
             system.add_guest_single(guest[0],guest[1])
