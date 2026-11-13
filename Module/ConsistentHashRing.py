@@ -19,7 +19,6 @@ class ConsistentHashRing:
         node_id = building.get_node_id
         node.assign_node_seq(rank)
         text = f"{node_id}:{rank}"
-        salt = salt
         combined_text = f"{text}{salt}"
         hash_obj = hashlib.sha256(combined_text.encode('utf-8'))
 

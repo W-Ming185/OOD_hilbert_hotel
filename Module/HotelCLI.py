@@ -31,7 +31,7 @@ class HotelCLI:
             "-------------------\n"
             "[0] Quit\n" 
             "[1] Add Guest\n" 
-            "[2] Add Building (Building ID 1 Will always be Default)\n" \
+            "[2] Add Building\n" \
             "[3] Remove Guest\n" \
             "[4] Remove Building\n" \
             "[5] Show Occupied Room\n" \
