@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+<rect width="100%" height="100%" fill="white"/>
+<text x="450.0" y="34" text-anchor="middle" font-family="Arial" font-size="22" font-weight="bold">Mod-N operation time by guest count</text>
+<text x="450.0" y="59" text-anchor="middle" font-family="Arial" font-size="13">N=10, 10 channels, salts 0/1/2, median and min-max range; unit: seconds</text>
+<line x1="92" y1="405.0" x2="864" y2="405.0" stroke="#d8dee8"/>
+<text x="80" y="409.0" text-anchor="end" font-family="Arial" font-size="12">0</text>
+<line x1="92" y1="342.4" x2="864" y2="342.4" stroke="#d8dee8"/>
+<text x="80" y="346.4" text-anchor="end" font-family="Arial" font-size="12">0.0724</text>
+<line x1="92" y1="279.8" x2="864" y2="279.8" stroke="#d8dee8"/>
+<text x="80" y="283.8" text-anchor="end" font-family="Arial" font-size="12">0.145</text>
+<line x1="92" y1="217.2" x2="864" y2="217.2" stroke="#d8dee8"/>
+<text x="80" y="221.2" text-anchor="end" font-family="Arial" font-size="12">0.217</text>
+<line x1="92" y1="154.6" x2="864" y2="154.6" stroke="#d8dee8"/>
+<text x="80" y="158.6" text-anchor="end" font-family="Arial" font-size="12">0.289</text>
+<line x1="92" y1="92.0" x2="864" y2="92.0" stroke="#d8dee8"/>
+<text x="80" y="96.0" text-anchor="end" font-family="Arial" font-size="12">0.362</text>
+<line x1="92" y1="92" x2="92" y2="405" stroke="#333"/>
+<line x1="92" y1="405" x2="864" y2="405" stroke="#333"/>
+<text x="220.7" y="430" text-anchor="middle" font-family="Arial" font-size="12">1000</text>
+<text x="478.0" y="430" text-anchor="middle" font-family="Arial" font-size="12">10000</text>
+<text x="735.3" y="430" text-anchor="middle" font-family="Arial" font-size="12">100000</text>
+<text x="24" y="248.5" transform="rotate(-90 24 248.5)" text-anchor="middle" font-family="Arial" font-size="14">Time (seconds)</text>
+<line x1="220.7" y1="403.6" x2="220.7" y2="403.4" stroke="#2563eb" stroke-width="2"/>
+<circle cx="220.7" cy="403.5" r="5" fill="#2563eb"/>
+<line x1="478.0" y1="386.9" x2="478.0" y2="370.8" stroke="#2563eb" stroke-width="2"/>
+<circle cx="478.0" cy="373.5" r="5" fill="#2563eb"/>
+<line x1="735.3" y1="211.6" x2="735.3" y2="125.5" stroke="#2563eb" stroke-width="2"/>
+<circle cx="735.3" cy="204.9" r="5" fill="#2563eb"/>
+<polyline points="220.7,403.5 478.0,373.5 735.3,204.9" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<line x1="92" y1="480" x2="116" y2="480" stroke="#2563eb" stroke-width="3"/>
+<text x="124" y="484" font-family="Arial" font-size="12">Guest assignment (median; min-max)</text>
+<line x1="220.7" y1="404.9" x2="220.7" y2="404.8" stroke="#dc2626" stroke-width="2"/>
+<circle cx="220.7" cy="404.9" r="5" fill="#dc2626"/>
+<line x1="478.0" y1="404.5" x2="478.0" y2="403.9" stroke="#dc2626" stroke-width="2"/>
+<circle cx="478.0" cy="404.0" r="5" fill="#dc2626"/>
+<line x1="735.3" y1="399.8" x2="735.3" y2="398.6" stroke="#dc2626" stroke-width="2"/>
+<circle cx="735.3" cy="399.7" r="5" fill="#dc2626"/>
+<polyline points="220.7,404.9 478.0,404.0 735.3,399.7" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+<line x1="312" y1="480" x2="336" y2="480" stroke="#dc2626" stroke-width="3"/>
+<text x="344" y="484" font-family="Arial" font-size="12">Sorted room listing (median; min-max)</text>
+</svg>
