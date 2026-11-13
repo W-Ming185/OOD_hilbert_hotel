@@ -184,6 +184,33 @@ class HotelSystem():
             if affected_guest:
                 history = self.migration(affected_guest)
             return self.__buildings,history            
+    
+    def add_building_modn(self, node_id: int):
+            if isinstance(node_id, bool) or not isinstance(node_id, int):
+                raise TypeError("Building ID must be an integer")
+            if node_id in self.__buildings:
+                self._record_no_migration()
+                return f"Building {node_id} already exists."
+            building = Building(node_id)
+            self.__buildings[node_id] = building
+            self.__hashmod.add_building(building)
+            self.__last_guest_count = len(self.__guest)
+            self.__last_migration = self.migration(list(self.__guest))
+            return building
+
+    def remove_building_modn(self, node_id: int):
+            if node_id not in self.__buildings:
+                self._record_no_migration()
+                return f"{node_id} is not exist."
+            if len(self.__buildings) == 1:
+                self._record_no_migration()
+                return "This is The Last Building"
+            old_building = self.__buildings[node_id]
+            self.__last_guest_count = len(self.__guest)
+            self.__hashmod.remove_building(node_id)
+            self.__last_migration = self.migration(list(self.__guest))
+            del self.__buildings[node_id]
+            return old_building
 
     def remove_building(self,node_id): #อย่าลืมmigrationnnnnnnnnnnnnnnnnnnnnn
         
@@ -233,18 +260,21 @@ class HotelSystem():
     def search_guest_by_room_id_and_building_id(self,node_id , room_no):
         if node_id in self.__buildings:
             building = self.__buildings.get(node_id)
-            for i in building.get_RoomAddr:
-                if i.room_no == room_no:
-                    room = i
-                    guest = room.guest
-                    id = guest.guest_id
-                    print(f"Found! GuestID : {id}")
-                    return id
+            room_list = building.get_RoomAddr
+            idx = bisect.bisect_left(room_list, room_no, key=lambda room: room.room_no)
             
-            print("Cannot Find Guest : RoomNo Not found")
+            # เช็คว่า index ไม่เกินความยาวลิสต์ และห้องที่ index นั้นมีหมายเลขตรงกับที่หาจริง
+            if idx < len(room_list) and room_list[idx].room_no == room_no:
+                room = room_list[idx]
+                guest = room.guest
+                id = guest.guest_id
+                    # print(f"Found! GuestID : {id}")
+                return id
+            
+            
             return "RoomNo Not found"
         else:
-            print("Cannot Find Guest : NodeID not found")
+        
             return "NodeID not found"
 
     def show_occupied_room(self):
