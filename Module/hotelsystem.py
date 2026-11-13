@@ -91,7 +91,7 @@ class HotelSystem():
             return "This id is already exist"
         id = (c,s)
         #SHA-256 Hash
-        salt = "ball"
+        salt = self.salt
         text = f"{c}:{s}{salt}"
 
         hash_num = hashlib.sha256(text.encode('utf-8'))
