@@ -11,23 +11,21 @@ class ConsistentHashRing:
     @property
     def get_vnode_size(self):
         return self.__vnode_size
-    
-    def add_node(self,building):
-        node = VNode(building)
-        building.add_vnode(node)
-        rank = building.get_Vnode_rank
-        node_id = building.get_node_id
-        node.assign_node_seq(rank)
-        text = f"{node_id}:{rank}"
-        salt = "ball"
-        combined_text = f"{text}{salt}"
-        hash_obj = hashlib.sha256(combined_text.encode('utf-8'))
 
-        bin_64bit = hash_obj.digest()[:8]
-        position_on_ring = int.from_bytes(bin_64bit, byteorder='big')
+    def _node_position(self, text):      # separate method so tests can override it
+        return int.from_bytes(hashlib.sha256(text.encode('utf-8')).digest()[:8], byteorder='big')
+    
+    def add_node(self,building,salt):
+        node = VNode(building)
+        j = building.get_Vnode_rank          # count BEFORE adding -> j = 0..V-1
+        building.add_vnode(node)
+        node_id = building.get_node_id
+        node.assign_node_seq(j)
+        position_on_ring = self._node_position(f"node:{node_id}:{j}{salt}")
 
         node.assign_hash_key(position_on_ring)
-        bisect.insort(self.__list, node, key=lambda x: x.get_hash_key)
+        # tie-break on (position, node_id, j) as the brief requires
+        bisect.insort(self.__list, node, key=lambda x: (x.get_hash_key, x.get_building.get_node_id, x.get_node_seq))
         return node
 
     def remove_node(self, building):
@@ -38,11 +36,12 @@ class ConsistentHashRing:
         return all_vnode
 
     def get_vnode_for_guest(self,hash_value): #binary search treeได้
-        for vnode in self.__list:
-            if vnode.get_hash_key >= hash_value:
-                return vnode
-
-        return self.__list[0]
+        if not self.__list:
+            return None
+        index = bisect.bisect_left(self.__list, hash_value, key=lambda x: x.get_hash_key)
+        if index >= len(self.__list):
+            index = 0
+        return self.__list[index]
 
     def prev_vnode(self,vnode):
         index = self.__list.index(vnode)
@@ -50,4 +49,4 @@ class ConsistentHashRing:
 
     def next_vnode(self,vnode):
         index = self.__list.index(vnode)
-        return self.__list[index+1 % len(self.__list)]    
+        return self.__list[(index+1) % len(self.__list)]

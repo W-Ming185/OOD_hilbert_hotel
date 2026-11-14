@@ -4,6 +4,8 @@ class CSVExporter:
     def write_csv(filename, data, fieldnames=None):
         with open(filename, "w", newline="", encoding="utf-8") as f:
             if not data:
+                if fieldnames:
+                    csv.writer(f).writerow(fieldnames)
                 return
             if isinstance(data[0], dict):
                 fieldnames = fieldnames or list(data[0].keys())

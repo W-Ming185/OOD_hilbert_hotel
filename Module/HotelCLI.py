@@ -11,21 +11,26 @@ class HotelCLI:
 
     def _read_int(self , text : str):
         try:
-            print(f"{text} : ",end="")
-            inp = int(input(""))
-            return inp
-        except:
-            raise Exception("Error")
+            return int(input(f"{text} : "))
+        except ValueError:
+            raise ValueError(f"{text} must be an integer")
             
     def run(self):
+        salt = input("Enter Salt : ")
+        self.__system.set_salt(salt)
         # show menu and call method
-        self.handle_add_building(1)
+        if self.__system.method == "consistent":
+            while True:
+                size = input("Enter Vnode size : ")
+                if self.__system.set_vnode_size(size):
+                    break
+                print("Invalid Input")
         while True:
             print(
             "-------------------\n"
             "[0] Quit\n" 
             "[1] Add Guest\n" 
-            "[2] Add Building (Building ID 1 Will always be Default)\n" \
+            "[2] Add Building\n" \
             "[3] Remove Guest\n" \
             "[4] Remove Building\n" \
             "[5] Show Occupied Room\n" \
@@ -33,54 +38,62 @@ class HotelCLI:
             "[7] Show Load Balance Report\n" \
             "[8] Search Guest *Location* by GuestID(C,S)\n" \
             "[9] Search Guest *ID* By (BuildingID , RoomNo)\n"
+            "[10] Initialize System\n"
+            "[11] Run Benchmark\n"
             "-------------------")
-            inp = input("Enter : ")
+            inp = input("Enter : ").strip()
             
-            if inp == "0":
-                return 
-            elif inp == "1":
-                print(
-                    "--------------------\n"
-                    "Add Guest Method:\n"
-                    "[1] Batch\n"
-                    "[2] Single\n" 
-                    "--------------------\n"
-                )
-                method = input("Method : ")
-                self.handle_add_guest(method)
-            elif inp == "2":
-                building_id = input("Building ID : ")
-                self.handle_add_building(building_id)
-            elif inp == "3":
-                print("Enter Guest ID for removal : ")
-                c = input("c :")
-                s = input("s :")
-                self.handle_remove_guest(c,s)
-            elif inp =="4":
-                building_id = input("Building id :")
-                self.handle_remove_building(building_id)
-            elif inp =="5":
-                self.show_occupied_rooms()
-            elif inp == "6":
-                self.export_csv()
-            elif inp == "7":
-                self.show_load_balance_report()
-            elif inp == "8":
-                print("Enter GuestID for Searching BuildingID and RoomNo")
-                c = input("c :")
-                s = input("s :")
-                self.handle_search_guest_location(c,s)
-            elif inp == "9":
-                print("Enter BuildingID and RoomNo for Searching GuestID")
-                node_id = input("BuildindID ")
-                room_no = input("RoomNo :")
-                self.handle_search_guest_by_room_id_and_building_id(node_id,room_no)
-            else:
-                print("Invalid Input Try Again")
+            try:
+                if inp == "0":
+                    return 
+                elif inp == "1":
+                    print(
+                        "--------------------\n"
+                        "Add Guest Method:\n"
+                        "[1] Batch\n"
+                        "[2] Single\n" 
+                        "--------------------\n"
+                    )
+                    method = input("Method : ")
+                    self.handle_add_guest(method)
+                elif inp == "2":
+                    building_id = input("Building ID : ")
+                    self.handle_add_building(building_id)
+                elif inp == "3":
+                    print("Enter Guest ID for removal : ")
+                    c = input("c :")
+                    s = input("s :")
+                    self.handle_remove_guest(c,s)
+                elif inp =="4":
+                    building_id = input("Building id :")
+                    self.handle_remove_building(building_id)
+                elif inp =="5":
+                    self.show_occupied_rooms()
+                elif inp == "6":
+                    self.export_csv()
+                elif inp == "7":
+                    self.show_load_balance_report()
+                elif inp == "8":
+                    print("Enter GuestID for Searching BuildingID and RoomNo")
+                    c = input("c :")
+                    s = input("s :")
+                    print(self.handle_search_guest_location(c,s))
+                elif inp == "9":
+                    print("Enter BuildingID and RoomNo for Searching GuestID")
+                    node_id = input("BuildindID ")
+                    room_no = input("RoomNo :")
+                    print(self.handle_search_guest_by_room_id_and_building_id(node_id,room_no))
+                elif inp == "10":
+                    n = self._read_int("N"); v = self._read_int("V")
+                    ch = self._read_int("channels"); k = self._read_int("guests per channel")
+                    print(self.__system.initialize_system(n, v, ch, k))
+                elif inp == "11":
+                    self.run_benchmark()
+                else:
+                    print("Invalid Input Try Again")
+            except (ValueError, TypeError) as e:
+                print(f"Invalid input : {e}")
 
-    def initialize_system(self):
-
-        pass
 
     def handle_add_guest(self , method : str) -> None:
             
@@ -102,7 +115,7 @@ class HotelCLI:
             c = int(c)
             s_start = int(s_start)
             n = int(n)
-            if c < 0 or s_start < 0 or n < 0:
+            if c < 1 or s_start < 1 or n < 0:
                 raise Exception("Input must be positive number")
         except:
             print("Error c,s_start,n should be int")
@@ -114,7 +127,7 @@ class HotelCLI:
         try:
             c = int(c)
             s = int(s)
-            if c < 0 or s < 0:
+            if c < 1 or s < 1:
                 raise Exception("Input must be positive number")
         except:
             print("Error c,s should be int")
@@ -128,7 +141,7 @@ class HotelCLI:
             c = int(c)
             s = int(s)
 
-            if c < 0 or s < 0:
+            if c < 1 or s < 1:
                 raise Exception("Input must be positive number")
         except:
             print("Error c,s should be int")
@@ -145,7 +158,15 @@ class HotelCLI:
             return "Node it Need to be int"
         system = self.get_system
 
-        return system.add_building(node_id)
+        building,history = system.add_building(node_id)
+        if building is None:
+            return
+        if history is not None:
+            for i in history:
+                print(i)
+
+        for i in building.values():
+            print(f"Building : {i.get_node_id} | Guest : {len(i.get_RoomAddr)}")
     
     def handle_remove_building(self , node_id):
         try:
@@ -154,20 +175,28 @@ class HotelCLI:
             print("Need to be int")
             return "Need to be int"
         system = self.get_system
-        return system.remove_building(node_id)
+        building,history = system.remove_building(node_id)
+        if building is None:
+            return
+        if history is not None:
+            for i in history:
+                print(i)
+
+        for i in building.values():
+            print(f"Building : {i.get_node_id} | Guest : {len(i.get_RoomAddr)}")
     
     def handle_search_guest_location(self , c ,s):
         try:
             c = int(c)
             s = int(s)
 
-            if c < 0 or s < 0:
+            if c < 1 or s < 1:
                 raise Exception("Input must be positive number")
         except:
             print("Error c,s should be int")
             return "Error c,s should be int"
         system = self.get_system
-        return system.search_guest_location(c,s)
+        return system.search_guest_location((c,s))
     
     def handle_search_guest_by_room_id_and_building_id(self , node_id , room_no):
         try:
@@ -192,12 +221,15 @@ class HotelCLI:
         return system.show_load_balance_report()
     
     def run_benchmark(self):
-        system = self.get_system
-
-        return system.run_benchmark()
+        from experiment import experiment as ex     # imported here to avoid loading matplotlib at startup
+        ex.experiment_1(); ex.experiment_2(); ex.experiment_3(); ex.write_csvs()
     
     def export_csv(self):
         system = self.get_system
-        return system.export_guest_csv()
+        system.export_guest_csv()
+        return system.export_migration_csv()
 
-Hotel = HotelCLI(HotelSystem())
+
+if __name__ == "__main__":
+    m = input("Method [1] consistent  [2] mod n : ").strip()
+    HotelCLI(HotelSystem("modn" if m == "2" else "consistent"))
