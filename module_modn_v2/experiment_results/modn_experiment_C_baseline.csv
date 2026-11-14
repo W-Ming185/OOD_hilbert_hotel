@@ -1,4 +1,0 @@
-experiment,N,K,V,salt,load_min,load_max,load_mean,load_sd,load_cv,memory_current_mib,memory_peak_mib,add_moved_guests,add_migration_rate,remove_moved_guests,remove_migration_rate
-C Mod-N baseline,10,10000,not applicable to Mod-N,0,952,1051,1000.0,31.796226,0.031796226,4.495204925537109,4.751781463623047,9111,0.9111,8984,0.8984
-C Mod-N baseline,10,10000,not applicable to Mod-N,1,936,1052,1000.0,34.499275,0.034499275,4.491889953613281,4.748405456542969,9019,0.9019,8928,0.8928
-C Mod-N baseline,10,10000,not applicable to Mod-N,2,956,1032,1000.0,22.104298,0.022104298,4.493526458740234,4.749797821044922,9095,0.9095,9057,0.9057

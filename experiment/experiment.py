@@ -209,10 +209,8 @@ def experiment_2():
     fig.suptitle(f"B: Migration; K={K}, V={V}, {CHANNELS} channels\nsalts={','.join(SALTS)}; median with min-max band", fontsize=14)
     for col, a in enumerate(("add", "remove")):
         plot_lines(axes[0][col], N, {n: res[n][a]['pct'] for n in METHODS}, f"{a} one building", 'Original building count N', 'Migrated guests (%)')
-        plot_lines(axes[1][col], N, {n: res[n][a]['ms'] for n in METHODS}, f"{a} one building (time)", 'Original building count N', 'ms')
-    if LOG_Y:
-        for ax in axes[1]:
-            ax.set_yscale('log')
+        plot_lines(axes[1][col], N, {n: res[n][a]['ms'] for n in METHODS}, f"{a} one building (time)", 'Original building count N', 'ms', logy=LOG_Y)
+    
     plt.tight_layout()
     plt.savefig('graph_B_migration_vs_N.png', dpi=200)
     plt.close(fig)
