@@ -19,11 +19,12 @@ class HotelCLI:
         salt = input("Enter Salt : ")
         self.__system.set_salt(salt)
         # show menu and call method
-        while True:
-            size = input("Enter Vnode size : ")
-            if self.__system.set_vnode_size(size):
-                break
-            print("Invalid Input")
+        if self.__system.method == "consistent":
+            while True:
+                size = input("Enter Vnode size : ")
+                if self.__system.set_vnode_size(size):
+                    break
+                print("Invalid Input")
         while True:
             print(
             "-------------------\n"
@@ -37,6 +38,8 @@ class HotelCLI:
             "[7] Show Load Balance Report\n" \
             "[8] Search Guest *Location* by GuestID(C,S)\n" \
             "[9] Search Guest *ID* By (BuildingID , RoomNo)\n"
+            "[10] Initialize System\n"
+            "[11] Run Benchmark\n"
             "-------------------")
             inp = input("Enter : ").strip()
             
@@ -80,14 +83,17 @@ class HotelCLI:
                     node_id = input("BuildindID ")
                     room_no = input("RoomNo :")
                     print(self.handle_search_guest_by_room_id_and_building_id(node_id,room_no))
+                elif inp == "10":
+                    n = self._read_int("N"); v = self._read_int("V")
+                    ch = self._read_int("channels"); k = self._read_int("guests per channel")
+                    print(self.__system.initialize_system(n, v, ch, k))
+                elif inp == "11":
+                    self.run_benchmark()
                 else:
                     print("Invalid Input Try Again")
             except (ValueError, TypeError) as e:
                 print(f"Invalid input : {e}")
 
-    def initialize_system(self):
-
-        pass
 
     def handle_add_guest(self , method : str) -> None:
             
@@ -215,12 +221,15 @@ class HotelCLI:
         return system.show_load_balance_report()
     
     def run_benchmark(self):
-        system = self.get_system
-
-        return system.run_benchmark()
+        from experiment import experiment as ex     # imported here to avoid loading matplotlib at startup
+        ex.experiment_1(); ex.experiment_2(); ex.experiment_3(); ex.write_csvs()
     
     def export_csv(self):
         system = self.get_system
-        return system.export_guest_csv()
+        system.export_guest_csv()
+        return system.export_migration_csv()
 
-Hotel = HotelCLI(HotelSystem())
+
+if __name__ == "__main__":
+    m = input("Method [1] consistent  [2] mod n : ").strip()
+    HotelCLI(HotelSystem("modn" if m == "2" else "consistent"))

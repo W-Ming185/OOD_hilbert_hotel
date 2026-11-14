@@ -1,10 +1,8 @@
-from module_modn_v2.Building import Building
-
 class HashMod:
-    """Mod-N selector : building index = hash % N (N = number of buildings).
-    Replaces ConsistentHashRing (no ring, no vnode)."""
+    """Mod-N building selector (the baseline method).
+    building = buildings[hash % N]   N = number of buildings, kept in the order they were added."""
     def __init__(self):
-        self.__list = []   # buildings in insertion order
+        self.__list = []
 
     @property
     def get_buildings(self):
@@ -14,12 +12,10 @@ class HashMod:
         return len(self.__list)
 
     def add_building(self,building):
-        self.__list.append(building)
-        return building
+        self.__list.append(building)      # new building goes to the end
 
     def remove_building(self,building):
-        self.__list.remove(building)
-        return building
+        self.__list.remove(building)      # the rest keep their order
 
     def get_building_for_guest(self,hash_value):
         if not self.__list:

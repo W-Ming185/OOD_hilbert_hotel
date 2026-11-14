@@ -8,10 +8,16 @@ from Module.vnode import VNode
 from Module.RoomAddr import RoomAddr
 from Module.Building import Building
 from Module.ConsistentHashRing import ConsistentHashRing
+from Module.HashMod import HashMod
 from Module.CSVExporter import CSVExporter
 
 class HotelSystem():
-    def __init__(self):
+    def __init__(self, method="consistent"):
+        if method not in ("consistent", "modn"):
+            raise ValueError("method must be 'consistent' or 'modn'")
+        self.__method = method          # which building-selection logic to use
+        self.__hashmod = HashMod()      # used only when method == "modn"
+        self.__last_migration = []      # structured rows of the last add/remove building
         self.__buildings = {} 
         self.__guest = [] #list of sorted hash
         self.__guest_ids_dic = {} #dictionary contain ID of each guest
@@ -29,6 +35,15 @@ class HotelSystem():
     def ring(self):
         return self.__ring
     @property
+    def hashmod(self):
+        return self.__hashmod
+    @property
+    def method(self):
+        return self.__method
+    @property
+    def last_migration(self):
+        return self.__last_migration
+    @property
     def guest(self):
         return self.__guest
     
@@ -45,6 +60,8 @@ class HotelSystem():
         return res
     
     def set_vnode_size(self,size):
+        if self.__method == "modn":
+            return 1        # Mod-N has no virtual node
         try:
             size = int(size)
         except (TypeError, ValueError):
@@ -61,8 +78,38 @@ class HotelSystem():
         print("ID,ROOM_NO,HASH")
         print("-----------------")
 
-    def initialize_system(self):
-        pass
+    def initialize_system(self, n, v, channels, guests_per_channel):
+        """guests_per_channel: an int (same for every channel) or a list with one count per channel."""
+        for name, val in (("N", n), ("V", v), ("channels", channels)):
+            if not self._valid_int(val) or val < 1:
+                print(f"{name} must be a positive integer")
+                return f"{name} must be a positive integer"
+        counts = [guests_per_channel] * channels if isinstance(guests_per_channel, int) else list(guests_per_channel)
+        if len(counts) != channels or any(not self._valid_int(x) or x < 0 for x in counts):
+            print("guests_per_channel must be a non-negative int or a list with one value per channel")
+            return "Invalid guests_per_channel"
+        if self.__buildings or self.__guest:
+            print("System is already initialized")
+            return "System is already initialized"
+        if self.__ring is not None and self.__ring.get_vnode_size != v:
+            print("V differs from the V already set")
+            return "V differs from the V already set"
+        if not self.set_vnode_size(v):
+            return "Invalid V"
+        # step 1: build the ring
+        for node_id in range(1, n + 1):
+            self.add_building(node_id)
+        # step 2: place the initial guests (channel ids start at 1)
+        for c, k in enumerate(counts, start=1):
+            self.add_guest_batch(c, 1, k)
+        return "Initialize Succeed"
+
+    def get_occupied_rooms(self):
+        result = []
+        for node_id in sorted(self.__buildings):
+            for room in self.__buildings[node_id].get_RoomAddr:   # already sorted by room_no
+                result.append((node_id, room.room_no))
+        return result
 
     @staticmethod
     def _valid_int(x):
@@ -71,7 +118,18 @@ class HotelSystem():
     def guest_dup_check(self , c , s):
         return (c, s) in self.__guest_ids_dic
     
+    def _select_building(self, position):
+        """The ONLY place where the two methods differ for guests."""
+        if self.__method == "modn":
+            return self.__hashmod.get_building_for_guest(position)
+        return self.__ring.get_vnode_for_guest(position).get_building
+
     def ring_check(self):
+        if self.__method == "modn":
+            if self.__hashmod.get_no_building == 0:
+                print("Cannot Insert Guest : No Building To Insert")
+                return False
+            return True
         ring = self.__ring
         if ring is None:
             print("Cannot Continue : Vnode size is not set")
@@ -100,9 +158,7 @@ class HotelSystem():
 
         position = self._hash_guest(c , s)
 
-        #Adding into the ring
-        vnode_to_be_inserted = self.ring.get_vnode_for_guest(position)
-        building = vnode_to_be_inserted.get_building
+        building = self._select_building(position)
         new_guest = Guest(c,s,position)
         bisect.insort(self.__guest , new_guest , key= lambda x : x.get_hash_value)
         building.add_room(new_guest)
@@ -157,33 +213,39 @@ class HotelSystem():
         if not self._valid_int(node_id):
             print("Building ID must be an integer")
             return None,None
-        if self.__ring is None:
+        if self.__method == "consistent" and self.__ring is None:
             print("Cannot Add Building : Vnode size is not set")
             return None,None
         if node_id in self.__buildings:
             print(f"Building {node_id} already exists.")
             return None,None
+        self.__last_migration = []
         building = Building(node_id)
         self.__buildings[node_id] = building
-        vnode_size = self.__ring.get_vnode_size
-        for _ in range(vnode_size):
-            self.__ring.add_node(building,self.salt)
-        
-        affected_guest = []
-        for vnode in building.get_Vnode:
-            prev = self.__ring.prev_vnode(vnode) 
-            prev_hash = prev.get_hash_key
-            new_hash = vnode.get_hash_key
 
-            if prev_hash < new_hash:
-                start_idx = bisect.bisect_right(self.__guest, prev_hash, key=lambda x: x.get_hash_value)
-                end_idx = bisect.bisect_right(self.__guest, new_hash, key=lambda x: x.get_hash_value)
-                affected_guest.extend(self.__guest[start_idx:end_idx])
-            else:
-                start_idx = bisect.bisect_right(self.__guest, prev_hash, key=lambda x: x.get_hash_value)
-                end_idx = bisect.bisect_right(self.__guest, new_hash, key=lambda x: x.get_hash_value)
-                affected_guest.extend(self.__guest[start_idx:])
-                affected_guest.extend(self.__guest[:end_idx])
+        affected_guest = []
+        if self.__method == "modn":
+            # N changed -> every guest has to be re-checked
+            self.__hashmod.add_building(building)
+            affected_guest = list(self.__guest)
+        else:
+            vnode_size = self.__ring.get_vnode_size
+            for _ in range(vnode_size):
+                self.__ring.add_node(building,self.salt)
+            for vnode in building.get_Vnode:
+                prev = self.__ring.prev_vnode(vnode) 
+                prev_hash = prev.get_hash_key
+                new_hash = vnode.get_hash_key
+
+                if prev_hash < new_hash:
+                    start_idx = bisect.bisect_right(self.__guest, prev_hash, key=lambda x: x.get_hash_value)
+                    end_idx = bisect.bisect_right(self.__guest, new_hash, key=lambda x: x.get_hash_value)
+                    affected_guest.extend(self.__guest[start_idx:end_idx])
+                else:
+                    start_idx = bisect.bisect_right(self.__guest, prev_hash, key=lambda x: x.get_hash_value)
+                    end_idx = bisect.bisect_right(self.__guest, new_hash, key=lambda x: x.get_hash_value)
+                    affected_guest.extend(self.__guest[start_idx:])
+                    affected_guest.extend(self.__guest[:end_idx])
         history = None
         if affected_guest:
             history = self.migration(affected_guest)
@@ -196,13 +258,15 @@ class HotelSystem():
         if len(self.__buildings) == 1:
             print("This is The Last Building")
             return None,None
+        self.__last_migration = []
         building = self.__buildings[node_id]
-        
-        self.__ring.remove_node(building)
 
-        affected_guest = []
-        for room in building.get_RoomAddr:
-            affected_guest.append(room.guest)
+        if self.__method == "modn":
+            self.__hashmod.remove_building(building)
+            affected_guest = list(self.__guest)     # N changed -> re-check everyone
+        else:
+            self.__ring.remove_node(building)
+            affected_guest = [room.guest for room in building.get_RoomAddr]
         history = None
         if affected_guest:
             history = self.migration(affected_guest)
@@ -223,14 +287,17 @@ class HotelSystem():
             room = guest.get_room
             old_node_id = room.node_id
             old_node = self.__buildings[old_node_id]
-            new_vnode = self.__ring.get_vnode_for_guest(guest.get_hash_value)
-            new_node = new_vnode.get_building
+            new_node = self._select_building(guest.get_hash_value)
             if new_node.get_node_id == old_node_id:
                 continue #did not move -> not counted
             old_room_no = room.room_no
             new_node.add_room(guest)
             old_node.remove_room(old_room_no)
             history.append(f"{guest.guest_id} : {old_node_id} -> {new_node.get_node_id} (room {old_room_no})")
+            self.__last_migration.append({
+                "channel_id": guest.guest_id[0], "sequence_id": guest.guest_id[1],
+                "old_node_id": old_node_id, "new_node_id": new_node.get_node_id,
+                "room_no": old_room_no})
         return history
 
     def search_guest_by_room_id_and_building_id(self,node_id , room_no):
@@ -261,14 +328,18 @@ class HotelSystem():
 
     def show_load_balance_report(self):
         n = Decimal(str(len(self.__guest)))
-        if n == 0:
-            print("There is no guest to calculate")
-            return
-        
         n_building = Decimal(str(len(self.__buildings)))
         if n_building == 0:
-            print("There is some guest but there is no building??? There is Some thing wrong in the code")
+            print("No building yet, nothing to report")
             return
+        if n == 0:
+            res = [(i, Decimal("0")) for i in self.__buildings]
+            print("-"*20)
+            print("Number of Guest in Each building : \n", *res)
+            print("Load Balance Report (K = 0: mean/SD/CV not computed)\n"
+                "Min        : 0\nMax        : 0\nMean       : 0\nSD         : 0\nTotal Guest: 0")
+            print("-"*20)
+            return res
 
         min_load = Decimal("Infinity")
         max_load = Decimal("-Infinity")
@@ -302,10 +373,8 @@ class HotelSystem():
         print("-"*20)
         return res
 
-    def run_benchmark(self):
-        pass
 
-    def export_guest_csv(self):
+    def export_guest_csv(self, filename="guest.csv"):
         data = []
         for value in self.__guest:
             c, s = value.guest_id
@@ -319,13 +388,19 @@ class HotelSystem():
             })
 
         CSVExporter.write_csv(
-            "guest.csv", data,
+            filename, data,
             fieldnames=["channel_id", "sequence_id", "node_id", "room_no"]
         )
         print("Export Complete...")
     
-    def export_migration_csv(self):#did not test yet
-        pass
+    def export_migration_csv(self, filename="migration.csv"):
+        """One row per guest moved by the LAST add/remove building."""
+        CSVExporter.write_csv(
+            filename, self.__last_migration,
+            fieldnames=["channel_id", "sequence_id", "old_node_id", "new_node_id", "room_no"]
+        )
+        print(f"Export Complete... ({len(self.__last_migration)} moved guests)")
 
-    def export_experiment_csv(self):
-        pass
+    @staticmethod
+    def export_experiment_csv(rows, filename="experiment.csv", fieldnames=None):
+        CSVExporter.write_csv(filename, rows, fieldnames)
